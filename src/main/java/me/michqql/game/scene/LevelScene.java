@@ -13,7 +13,7 @@ public class LevelScene extends Scene {
 
     @Override
     public void init() {
-        shader = Shader.getShader("default.glsl");
+        shader = Shader.REGISTRY.get("default.glsl");
         if(shader == null) {
             System.out.println("WARNING: Shader is null");
             return;

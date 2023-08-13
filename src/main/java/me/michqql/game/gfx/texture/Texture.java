@@ -1,5 +1,6 @@
 package me.michqql.game.gfx.texture;
 
+import me.michqql.game.util.registry.Registry;
 import org.lwjgl.BufferUtils;
 
 import java.io.File;
@@ -14,6 +15,13 @@ import static org.lwjgl.stb.STBImage.stbi_load;
 
 public class Texture {
 
+    public static final Registry<Texture> REGISTRY = new Registry<>(s -> {
+        try {
+            return new Texture(s);
+        } catch (TextureLoadException e) {
+            return null;
+        }
+    });
     private static final String TEXTURE_PATH = "./assets/textures";
     private static final File TEXTURE_DIRECTORY = new File(TEXTURE_PATH);
 
@@ -64,15 +72,5 @@ public class Texture {
 
     public void unbind() {
         glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
-    public static Texture getTexture(String fileName) {
-        return TEXTURE_CACHE.computeIfAbsent(fileName, s -> {
-            try {
-                return new Texture(s);
-            } catch (TextureLoadException e) {
-                return null;
-            }
-        });
     }
 }

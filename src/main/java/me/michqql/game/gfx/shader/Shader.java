@@ -1,5 +1,7 @@
 package me.michqql.game.gfx.shader;
 
+import me.michqql.game.util.registry.Registry;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +11,13 @@ import static org.lwjgl.opengl.GL20.*;
 
 public class Shader {
 
+    public static final Registry<Shader> REGISTRY = new Registry<>(fileName -> {
+        try {
+            return new Shader(fileName);
+        } catch (FileNotFoundException e) {
+            return null;
+        }
+    });
     private static final String SHADER_PATH = "./assets/shaders";
     private static final File SHADER_DIRECTORY = new File(SHADER_PATH);
 
@@ -122,13 +131,5 @@ public class Shader {
     // Package-private
     int getShaderProgramId() {
         return shaderProgramId;
-    }
-
-    public static Shader getShader(String fileName) {
-        try {
-            return new Shader(fileName);
-        } catch (FileNotFoundException e) {
-            return null;
-        }
     }
 }
