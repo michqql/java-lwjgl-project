@@ -44,6 +44,10 @@ public class Shader {
         this.preparedUpload = preparedUpload;
     }
 
+    public ShaderUploader getUploader() {
+        return uploader;
+    }
+
     public void useShader() {
         // Bind shader program
         glUseProgram(shaderProgramId);

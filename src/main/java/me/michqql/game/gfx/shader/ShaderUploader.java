@@ -21,6 +21,11 @@ public class ShaderUploader {
         glUniform1i(varLocation, i);
     }
 
+    public void intArray(String varName, int[] arr) {
+        int varLocation = getVariableLocation(varName);
+        glUniform1iv(varLocation, arr);
+    }
+
     public void floatValue(String varName, float f) {
         int varLocation = getVariableLocation(varName);
         glUniform1f(varLocation, f);
