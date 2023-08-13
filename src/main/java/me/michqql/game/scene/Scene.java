@@ -10,14 +10,10 @@ import java.util.List;
 
 public abstract class Scene {
 
-    protected final Renderer renderer;
     protected final Camera camera = new Camera(new Vector2f());
     private boolean running = false;
+    protected Renderer renderer;
     private final List<GameObject> gameObjectList = new ArrayList<>();
-
-    public Scene(Renderer renderer) {
-        this.renderer = renderer;
-    }
 
     public void init() {
     }
@@ -41,6 +37,8 @@ public abstract class Scene {
         for(GameObject gameObject : gameObjectList) {
             gameObject.update(deltaTime);
         }
+
+        renderer.render();
     }
 
     public Camera getCamera() {

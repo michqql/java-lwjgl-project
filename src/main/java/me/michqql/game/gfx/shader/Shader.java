@@ -1,18 +1,11 @@
 package me.michqql.game.gfx.shader;
 
-import org.joml.Matrix4f;
-import org.lwjgl.BufferUtils;
-
 import java.io.*;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.glBindVertexArray;
-import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 
 public class Shader {
 
@@ -22,24 +15,9 @@ public class Shader {
     private final File shaderFile;
 
     private int shaderProgramId;
-    private int vaoId; // vertex array object
 
     private final ShaderUploader uploader;
     private Consumer<ShaderUploader> preparedUpload = null;
-
-    private final float[] vertexArray = {
-            // position (x, y, z),   colour (r, g, b, a)           // UV coordinates
-            100.5f,   0.5f, 0.0f,      1.0f, 0.0f, 0.0f, 1.0f,     1, 0, // bottom right [0]
-              0.5f, 100.5f, 0.0f,      0.0f, 1.0f, 0.0f, 1.0f,     0, 1, // top left     [1]
-            100.5f, 100.5f, 0.0f,      0.0f, 0.0f, 1.0f, 1.0f,     1, 1, // top right    [2]
-              0.5f,   0.5f, 0.0f,      1.0f, 1.0f, 1.0f, 1.0f,     0, 0  // bottom left   [3]
-    };
-
-    // Must be counter-clockwise
-    private final int[] elementArray = {
-            2, 1, 0,
-            0, 1, 3
-    };
 
     private Shader(String fileName) throws FileNotFoundException {
         this.shaderFile = new File(SHADER_DIRECTORY, fileName);
@@ -51,7 +29,6 @@ public class Shader {
         uploader = new ShaderUploader(this);
 
         compileShader();
-        generateVaoVboEbo();
     }
 
     public void prepareUploads(Consumer<ShaderUploader> preparedUpload) {
@@ -66,21 +43,6 @@ public class Shader {
         if(preparedUpload != null) {
             preparedUpload.accept(uploader);
         }
-
-        // Bind VAO
-        glBindVertexArray(vaoId);
-
-        // Enable pointers
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-
-        glDrawElements(GL_TRIANGLES, elementArray.length, GL_UNSIGNED_INT, 0);
-
-        // Unbind everything
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
-        glBindVertexArray(0);
-        glUseProgram(0);
     }
 
     public void detach() {
@@ -108,45 +70,6 @@ public class Shader {
         glAttachShader(shaderProgramId, fragmentShaderId);
         glLinkProgram(shaderProgramId);
         checkProgramLinkedSuccessfully(shaderProgramId);
-    }
-
-    private void generateVaoVboEbo() {
-        vaoId = glGenVertexArrays();
-        glBindVertexArray(vaoId);
-
-        // Create a float buffer of vertices
-        FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(vertexArray.length);
-        vertexBuffer.put(vertexArray).flip(); // flipped to read mode
-        // Create vbo and upload vertex buffer
-        int vboId = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, vboId);
-        glBufferData(GL_ARRAY_BUFFER, vertexBuffer, GL_STATIC_DRAW);
-
-        // Create the indices
-        IntBuffer elementBuffer = BufferUtils.createIntBuffer(elementArray.length);
-        elementBuffer.put(elementArray).flip(); // flipped to read mode
-        // Create ebo
-        int eboId = glGenBuffers();
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboId);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementBuffer, GL_STATIC_DRAW);
-
-        // Add the vertex attribute pointers
-        int positionsSize = 3;
-        int coloursSize = 4;
-        int uvSize = 2;
-        int floatSizeBytes = Float.BYTES; // 4
-        int vertexSizeBytes = (positionsSize + coloursSize + uvSize) * floatSizeBytes;
-
-        glVertexAttribPointer(0, positionsSize, GL_FLOAT, false, vertexSizeBytes, 0);
-        glEnableVertexAttribArray(0);
-
-        glVertexAttribPointer(1, coloursSize, GL_FLOAT, false, vertexSizeBytes,
-                positionsSize * floatSizeBytes);
-        glEnableVertexAttribArray(1);
-
-        glVertexAttribPointer(2, coloursSize, GL_FLOAT, false, vertexSizeBytes,
-                (positionsSize + coloursSize) * floatSizeBytes);
-        glEnableVertexAttribArray(2);
     }
 
     private Map<String, CharSequence> parseShaderFile() {
