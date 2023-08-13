@@ -1,11 +1,14 @@
 package me.michqql.game.entity;
 
+import me.michqql.game.entity.components.Transform;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class GameObject {
 
     private final String name;
+    private final Transform transform = new Transform();
     private final List<Component> componentList = new ArrayList<>();
 
     public GameObject(String name) {
@@ -22,6 +25,14 @@ public class GameObject {
         for(Component component : componentList) {
             component.start();
         }
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Transform getTransform() {
+        return transform;
     }
 
     public <T extends Component> T getComponent(Class<T> componentType) {

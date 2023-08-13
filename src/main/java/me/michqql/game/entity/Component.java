@@ -9,6 +9,10 @@ public abstract class Component {
 
     public abstract void update(float deltaTime);
 
+    public GameObject getParentGameObject() {
+        return parentGameObject;
+    }
+
     void setGameObjectParent(GameObject parent) {
         this.parentGameObject = parent;
     }

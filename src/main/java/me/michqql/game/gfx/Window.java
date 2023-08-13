@@ -57,6 +57,10 @@ public class Window {
         currentScene.start();
     }
 
+    public Scene getCurrentScene() {
+        return currentScene;
+    }
+
     private void init() {
         // Setup an error callback
         GLFWErrorCallback.createPrint(System.err).set();
