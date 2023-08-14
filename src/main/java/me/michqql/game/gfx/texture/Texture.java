@@ -28,6 +28,8 @@ public class Texture {
 
     private final int textureId;
 
+    private final int width, height;
+
     private Texture(String fileName) throws TextureLoadException {
         final String fullTexturePath = TEXTURE_PATH + "/" + fileName;
 
@@ -54,7 +56,9 @@ public class Texture {
                 format = GL_RGBA;
             }
 
-            glTexImage2D(GL_TEXTURE_2D, 0, format, width.get(0), height.get(0), 0, format,
+            this.width = width.get(0);
+            this.height = height.get(0);
+            glTexImage2D(GL_TEXTURE_2D, 0, format, this.width, this.height, 0, format,
                     GL_UNSIGNED_BYTE, image);
         } else {
             throw new TextureLoadException("Unable to load texture: " + fileName);
@@ -65,6 +69,14 @@ public class Texture {
 
     public int getTextureId() {
         return textureId;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
     }
 
     public void bind() {

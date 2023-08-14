@@ -1,8 +1,5 @@
 package me.michqql.game.util.registry;
 
-import me.michqql.game.gfx.shader.Shader;
-
-import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
