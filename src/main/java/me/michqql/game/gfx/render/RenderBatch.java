@@ -94,9 +94,20 @@ public class RenderBatch {
     }
 
     public void render() {
-        // re-buffer all data every frame (for now)
-        glBindBuffer(GL_ARRAY_BUFFER, vboId);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, vertices);
+        boolean rebufferedData = false;
+        for (int i = 0; i < numSprites; i++) {
+            SpriteRenderer spriteRenderer = sprites[i];
+            if(spriteRenderer.isDirty()) {
+                loadVertexProperties(spriteRenderer, i);
+                rebufferedData = true;
+            }
+        }
+
+        // re-buffer all data if something changed
+        if(rebufferedData) {
+            glBindBuffer(GL_ARRAY_BUFFER, vboId);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, vertices);
+        }
 
         shader.useShader(); // binds the shader program and uploads uniforms
 
@@ -153,16 +164,17 @@ public class RenderBatch {
         // Check if sprite renderer has a texture
         // If so, increment the number of textures this has seen
         int textureIndex = 0;
-        if(spriteRenderer.getTexture() != null) {
-            textureIndex = textureIds.indexOf(spriteRenderer.getTexture()) + 1;
+        if(spriteRenderer.getSprite() != null) {
+            textureIndex = textureIds.indexOf(spriteRenderer.getSprite().getTexture()) + 1;
             if(textureIndex <= 0) {
-                textureIds.add(spriteRenderer.getTexture());
+                textureIds.add(spriteRenderer.getSprite().getTexture());
                 textureIndex = textureIds.size();
             }
         }
 
-        Transform transform = spriteRenderer.getParentGameObject().getTransform();
-        Vector4f colour = spriteRenderer.getColour();
+        final Transform transform = spriteRenderer.getParentGameObject().getTransform();
+        final Vector4f colour = spriteRenderer.getColour();
+        final Vector2f[] textureCoords = spriteRenderer.getSprite().getTextureCoords();
         for(int i = 0; i < VERTEX_OFFSETS.length; i++) {
             Vector2f offsets = VERTEX_OFFSETS[i];
 
@@ -178,8 +190,9 @@ public class RenderBatch {
             vertices[offset + 5] = colour.w();
 
             // Load the texture coordinates
-            vertices[offset + 6] = offsets.x();
-            vertices[offset + 7] = offsets.y();
+            Vector2f coords = textureCoords[i];
+            vertices[offset + 6] = coords.x();
+            vertices[offset + 7] = coords.y();
 
             // Load the texture id
             vertices[offset + 8] = textureIndex;
