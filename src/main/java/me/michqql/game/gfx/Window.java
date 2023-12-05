@@ -1,5 +1,6 @@
 package me.michqql.game.gfx;
 
+import me.michqql.game.gfx.gui.GuiManager;
 import me.michqql.game.scene.LevelScene;
 import me.michqql.game.scene.Scene;
 import me.michqql.game.input.KeyListener;
@@ -11,6 +12,8 @@ import org.lwjgl.Version;
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL11C;
+import org.lwjgl.opengl.GL14C;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -35,6 +38,9 @@ public class Window {
     // Scene
     private Scene currentScene;
     private Scene lastScene;
+
+    // Gui
+    private GuiManager guiManager;
 
     private Window() {
         this.width = 1280;
@@ -103,8 +109,13 @@ public class Window {
         // Critical - do not remove
         GL.createCapabilities();
 
+        // Enables alpha blending
         glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+        GL14C.glBlendFuncSeparate(GL11C.GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL11C.GL_SRC_ALPHA, GL11C.GL_DST_ALPHA);
+        // Alpha blending end
+
+        guiManager = new GuiManager(glfwWindowId, "#version 330 core");
     }
 
     private void loop() {
@@ -120,18 +131,22 @@ public class Window {
             // Poll mouse and key events
             glfwPollEvents();
 
-            glClearColor(0f, 0f, 0.2f, 1f);
+            glClearColor(1f, 1f, 1f, 1f);
             glClear(GL_COLOR_BUFFER_BIT);
 
             if(currentScene != null) {
                 currentScene.update(deltaTime);
             }
 
+            // Update gui before swapping buffers
+            guiManager.update(deltaTime);
             glfwSwapBuffers(glfwWindowId);
         }
     }
 
     private void stop() {
+        guiManager.destroyImGui();
+
         // Free the memory
         Callbacks.glfwFreeCallbacks(glfwWindowId);
         glfwDestroyWindow(glfwWindowId);

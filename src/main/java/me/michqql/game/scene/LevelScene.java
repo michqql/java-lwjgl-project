@@ -37,7 +37,6 @@ public class LevelScene extends Scene {
         gameObject.getTransform().getPosition().set(100, 100);
         gameObject.getTransform().getScale().set(256, 256);
         gameObject.addComponent(new SpriteRenderer(atlas.getSprite(0)));
-
         addGameObject(gameObject);
     }
 

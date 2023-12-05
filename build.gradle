@@ -6,6 +6,7 @@ group 'me.michqql'
 version '1.0-SNAPSHOT'
 
 repositories {
+    jcenter()
     mavenCentral()
 }
 
@@ -18,9 +19,12 @@ test {
     useJUnitPlatform()
 }
 
-project.ext.lwjglVersion = "3.3.2"
-project.ext.jomlVersion = "1.10.5"
-project.ext.lwjglNatives = "natives-windows"
+ext {
+    lwjglVersion = "3.3.2"
+    jomlVersion = "1.10.5"
+    lwjglNatives = "natives-windows"
+    imguiVersion = "1.76-0.9"
+}
 
 dependencies {
     implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
@@ -38,4 +42,12 @@ dependencies {
     runtimeOnly "org.lwjgl:lwjgl-opengl::$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-stb::$lwjglNatives"
     implementation "org.joml:joml:${jomlVersion}"
+
+    // IM GUI
+    implementation "io.imgui.java:binding:$imguiVersion"
+    implementation "io.imgui.java:lwjgl3:$imguiVersion"
+
+    // Include all available natives, but it's likely that you want something specific
+    runtimeOnly "io.imgui.java:natives-windows:$imguiVersion"
+    // END IM GUI
 }

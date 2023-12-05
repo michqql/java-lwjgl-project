@@ -15,7 +15,7 @@ import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.glBindVertexArray;
 import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 
-public class RenderBatch {
+public class RenderBatch implements Comparable<RenderBatch> {
 
     private static final Vector2f[] VERTEX_OFFSETS = {
             new Vector2f(1f, 1f), // top-right
@@ -54,10 +54,12 @@ public class RenderBatch {
     private int vaoId, vboId;
     private final int maxBatchSize;
     private final Shader shader;
+    private int zIndex;
 
-    public RenderBatch(Shader shader, int maxBatchSize) {
+    public RenderBatch(Shader shader, int maxBatchSize, int zIndex) {
         this.shader = shader;
         this.maxBatchSize = maxBatchSize;
+        this.zIndex = zIndex;
         this.sprites = new SpriteRenderer[maxBatchSize];
 
         this.vertices = new float[maxBatchSize * 4 * VERTEX_SIZE];
@@ -218,5 +220,14 @@ public class RenderBatch {
         }
 
         return elements;
+    }
+
+    public int getZIndex() {
+        return zIndex;
+    }
+
+    @Override
+    public int compareTo(RenderBatch o) {
+        return zIndex - o.zIndex;
     }
 }

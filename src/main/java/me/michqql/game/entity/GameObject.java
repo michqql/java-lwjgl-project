@@ -10,6 +10,7 @@ public class GameObject {
     private final String name;
     private final Transform transform = new Transform();
     private final List<Component> componentList = new ArrayList<>();
+    private int zIndex;
 
     public GameObject(String name) {
         this.name = name;
@@ -57,5 +58,13 @@ public class GameObject {
     public void addComponent(Component component) {
         this.componentList.add(component);
         component.setGameObjectParent(this);
+    }
+
+    public int getZIndex() {
+        return zIndex;
+    }
+
+    public void setZIndex(int zIndex) {
+        this.zIndex = zIndex;
     }
 }
