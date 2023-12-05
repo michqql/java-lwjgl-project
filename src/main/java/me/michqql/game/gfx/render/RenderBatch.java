@@ -118,7 +118,6 @@ public class RenderBatch {
         }
         shader.getUploader().intArray("uTextures", TEXTURE_SLOTS);
 
-
         glBindVertexArray(vaoId);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);

@@ -102,6 +102,9 @@ public class Window {
 
         // Critical - do not remove
         GL.createCapabilities();
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     }
 
     private void loop() {
