@@ -2,10 +2,11 @@ package me.michqql.game.gfx.texture;
 
 import org.joml.Vector2f;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class TextureAtlas {
+
+    private static final HashMap<Texture, TextureAtlas> TEXTURE_ATLAS_MAP = new HashMap<>();
 
     private final Texture texture;
     private final List<Sprite> sprites = new ArrayList<>();
@@ -30,7 +31,7 @@ public class TextureAtlas {
                         new Vector2f(leftX, topY)
                 };
 
-                this.sprites.add(new Sprite(texture, textureCoords));
+                this.sprites.add(new Sprite(texture, textureCoords, spriteWidth, spriteHeight));
             }
         }
     }
@@ -43,7 +44,16 @@ public class TextureAtlas {
         return sprites.get(index);
     }
 
+    public static Collection<TextureAtlas> getAllTextureAtlases() {
+        return TEXTURE_ATLAS_MAP.values();
+    }
+
     public static TextureAtlas getTextureAtlas(Texture texture, int spriteWidth, int spriteHeight) {
-        return new TextureAtlas(texture, spriteWidth, spriteHeight);
+        if(TEXTURE_ATLAS_MAP.containsKey(texture))
+            return TEXTURE_ATLAS_MAP.get(texture);
+
+        TextureAtlas atlas = new TextureAtlas(texture, spriteWidth, spriteHeight);
+        TEXTURE_ATLAS_MAP.put(texture, atlas);
+        return atlas;
     }
 }

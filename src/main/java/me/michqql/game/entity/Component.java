@@ -2,7 +2,7 @@ package me.michqql.game.entity;
 
 public abstract class Component {
 
-    private GameObject parentGameObject = null;
+    private transient GameObject parentGameObject = null;
 
     public void start() {
     }

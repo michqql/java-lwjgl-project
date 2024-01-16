@@ -1,4 +1,4 @@
-package me.michqql.game.entity.components;
+package me.michqql.game.entity;
 
 import org.joml.Vector2f;
 
@@ -10,7 +10,7 @@ public class Transform {
     private final Vector2f scale;
 
     public Transform() {
-        this(new Vector2f(), new Vector2f());
+        this(new Vector2f(), new Vector2f(1f, 1f));
     }
 
     public Transform(Vector2f position) {

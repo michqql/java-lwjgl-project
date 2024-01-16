@@ -22,15 +22,19 @@ public class Texture {
         }
     });
     private static final String TEXTURE_PATH = "./assets/textures";
-    private static final File TEXTURE_DIRECTORY = new File(TEXTURE_PATH);
 
-    private static final Map<String, Texture> TEXTURE_CACHE = new HashMap<>();
+    static {
+        // Create the textures directory
+        new File(TEXTURE_PATH);
+    }
 
+    private final String fileName;
     private final int textureId;
 
     private final int width, height;
 
     private Texture(String fileName) throws TextureLoadException {
+        this.fileName = fileName;
         final String fullTexturePath = TEXTURE_PATH + "/" + fileName;
 
         this.textureId = glGenTextures();
@@ -64,6 +68,10 @@ public class Texture {
         }
 
         stbi_image_free(image); // free the memory to avoid a leak
+    }
+
+    public String getFileName() {
+        return fileName;
     }
 
     public int getTextureId() {

@@ -10,32 +10,21 @@ import me.michqql.game.util.Time;
 
 public class LevelScene extends Scene {
 
-    protected Shader shader;
     protected TextureAtlas atlas;
-    protected GameObject gameObject;
 
     @Override
     public void init() {
-        shader = Shader.REGISTRY.get("default.glsl");
-        if(shader == null) {
-            System.out.println("WARNING: Shader is null");
-            return;
-        }
-
-        shader.prepareUploads(uploader -> {
-            uploader.matrix4f("uProjMatrix", camera.getProjectionMatrix());
-            uploader.matrix4f("uViewMatrix", camera.getViewMatrix());
-            uploader.floatValue("uTime", Time.getTime());
-        });
-
-        renderer = new Renderer(shader);
+        super.init();
 
         Texture texture = Texture.REGISTRY.get("spritesheet.png");
         this.atlas = TextureAtlas.getTextureAtlas(texture, 32, 32);
+    }
 
-        this.gameObject = new GameObject("Object");
+    @Override
+    public void firstInit() {
+        GameObject gameObject = new GameObject("Object");
         gameObject.getTransform().getPosition().set(100, 100);
-        gameObject.getTransform().getScale().set(256, 256);
+        gameObject.getTransform().getScale().set(1, 1);
         gameObject.addComponent(new SpriteRenderer(atlas.getSprite(0)));
         addGameObject(gameObject);
     }
@@ -49,11 +38,22 @@ public class LevelScene extends Scene {
         if(accumulatedDt > 1) {
             accumulatedDt = 0;
             index++;
-            gameObject.getComponent(SpriteRenderer.class)
-                    .setSprite(atlas.getSprite(index % atlas.getNumberOfSprites()));
+            forEachGameObject(go -> {
+                go.getComponent(SpriteRenderer.class)
+                        .setSprite(atlas.getSprite(index % atlas.getNumberOfSprites()));
+            });
         }
 
-        gameObject.getTransform().getPosition().x += 50 * deltaTime;
+        forEachGameObject(go -> {
+            SpriteRenderer sr = go.getComponent(SpriteRenderer.class);
+            float offX = 16, offY = 16;
+            if(sr != null && sr.getSprite() != null) {
+                offX = (go.getTransform().getScale().x) / 2;
+                offY = (go.getTransform().getScale().y) / 2;
+            }
+            go.getTransform().getPosition().set(camera.getOrthographicX() - offX,
+                    camera.getOrthographicY() - offY);
+        });
 
         super.update(deltaTime);
     }

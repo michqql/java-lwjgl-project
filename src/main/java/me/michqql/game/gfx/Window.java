@@ -1,12 +1,14 @@
 package me.michqql.game.gfx;
 
 import me.michqql.game.gfx.gui.GuiManager;
+import me.michqql.game.gfx.render.debug.DebugDraw;
 import me.michqql.game.scene.LevelScene;
 import me.michqql.game.scene.Scene;
 import me.michqql.game.input.KeyListener;
 import me.michqql.game.input.KeyboardInput;
 import me.michqql.game.input.MouseInput;
 import me.michqql.game.input.MouseListener;
+import me.michqql.game.scene.editor.EditorScene;
 import me.michqql.game.util.Time;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.Callbacks;
@@ -42,6 +44,10 @@ public class Window {
     // Gui
     private GuiManager guiManager;
 
+    // Scenes
+    private LevelScene levelScene;
+    private EditorScene editorScene;
+
     private Window() {
         this.width = 1280;
         this.height = 720;
@@ -51,15 +57,27 @@ public class Window {
     public void run() {
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
         init();
-        setScene(unused -> new LevelScene());
+        levelScene = new LevelScene();
+        //setScene(u -> levelScene);
+        editorScene = new EditorScene();
+        setScene(u -> editorScene);
         loop();
         stop();
     }
 
     public void setScene(Function<Void, Scene> sceneFactory) {
+        // Keep a reference to the old scene and save it, if possible
         lastScene = currentScene;
+        if(lastScene != null)
+            lastScene.save();
+
+        // Create and load the new scene
         currentScene = sceneFactory.apply(null);
         currentScene.init();
+        // Only call postInit if the scene did not load from file
+        if(!currentScene.load())
+            currentScene.firstInit();
+        currentScene.postInit();
         currentScene.start();
     }
 
@@ -80,7 +98,7 @@ public class Window {
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-        glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+        glfwWindowHint(GLFW_MAXIMIZED, GLFW_FALSE);
 
         // Create the window
         glfwWindowId = glfwCreateWindow(width, height, title, NULL, NULL);
@@ -88,7 +106,7 @@ public class Window {
             throw new IllegalStateException("Failed to create the GLFW window");
         }
 
-        // Register input listeners
+        // Register input listeners and other callbacks
         // Mouse
         MouseInput.getInstance(); // registers the listener
         glfwSetCursorPosCallback(glfwWindowId, MouseListener::mousePosCallback);
@@ -97,6 +115,11 @@ public class Window {
         // Keyboard
         KeyboardInput.getInstance(); // registers the listener
         glfwSetKeyCallback(glfwWindowId, KeyListener::keyCallback);
+        // Window resize callback
+        glfwSetWindowSizeCallback(glfwWindowId, (windowId, nWidth, nHeight) -> {
+            this.width = nWidth;
+            this.height = nHeight;
+        });
 
         // Make OpenGL context current
         glfwMakeContextCurrent(glfwWindowId);
@@ -134,14 +157,23 @@ public class Window {
             glClearColor(1f, 1f, 1f, 1f);
             glClear(GL_COLOR_BUFFER_BIT);
 
+            // Prepare the next frame
+            DebugDraw.beginFrame();
+
             if(currentScene != null) {
                 currentScene.update(deltaTime);
+
+                // Draw the debug lines
+                DebugDraw.draw(currentScene.getCamera());
             }
 
             // Update gui before swapping buffers
-            guiManager.update(deltaTime);
+            guiManager.update(deltaTime, currentScene);
+
             glfwSwapBuffers(glfwWindowId);
         }
+
+        currentScene.save();
     }
 
     private void stop() {
@@ -154,5 +186,13 @@ public class Window {
         // Terminate GLFW
         glfwTerminate();
         Objects.requireNonNull(glfwSetErrorCallback(null)).free();
+    }
+
+    public static int getWidth() {
+        return getInstance().width;
+    }
+
+    public static int getHeight() {
+        return getInstance().height;
     }
 }

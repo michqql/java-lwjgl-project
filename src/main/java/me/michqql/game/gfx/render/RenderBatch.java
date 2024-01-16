@@ -1,7 +1,7 @@
 package me.michqql.game.gfx.render;
 
 import me.michqql.game.entity.components.SpriteRenderer;
-import me.michqql.game.entity.components.Transform;
+import me.michqql.game.entity.Transform;
 import me.michqql.game.gfx.shader.Shader;
 import me.michqql.game.gfx.texture.Texture;
 import org.joml.Vector2f;

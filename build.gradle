@@ -6,7 +6,6 @@ group 'me.michqql'
 version '1.0-SNAPSHOT'
 
 repositories {
-    jcenter()
     mavenCentral()
 }
 
@@ -23,7 +22,7 @@ ext {
     lwjglVersion = "3.3.2"
     jomlVersion = "1.10.5"
     lwjglNatives = "natives-windows"
-    imguiVersion = "1.76-0.9"
+    imguiVersion = "1.86.11"
 }
 
 dependencies {
@@ -44,10 +43,19 @@ dependencies {
     implementation "org.joml:joml:${jomlVersion}"
 
     // IM GUI
-    implementation "io.imgui.java:binding:$imguiVersion"
-    implementation "io.imgui.java:lwjgl3:$imguiVersion"
-
+    implementation "io.github.spair:imgui-java-binding:$imguiVersion"
+    implementation "io.github.spair:imgui-java-lwjgl3:$imguiVersion"
+    runtimeOnly "io.github.spair:imgui-java-natives-windows-ft:$imguiVersion"
+    //implementation "io.imgui.java:binding:$imguiVersion"
+    //implementation "io.imgui.java:lwjgl3:$imguiVersion"
     // Include all available natives, but it's likely that you want something specific
-    runtimeOnly "io.imgui.java:natives-windows:$imguiVersion"
+    //runtimeOnly "io.imgui.java:natives-windows:$imguiVersion"
     // END IM GUI
+
+    // GSON Start
+    implementation 'com.google.code.gson:gson:2.10.1'
+    // GSON End
+
+    // Reflections
+    implementation 'org.reflections:reflections:0.10.2'
 }

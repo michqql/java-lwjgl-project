@@ -1,15 +1,17 @@
 package me.michqql.game.gfx.gui;
 
 import imgui.*;
-import imgui.callbacks.ImStrConsumer;
-import imgui.callbacks.ImStrSupplier;
-import imgui.enums.ImGuiBackendFlags;
-import imgui.enums.ImGuiConfigFlags;
-import imgui.enums.ImGuiKey;
-import imgui.enums.ImGuiMouseCursor;
+import imgui.callback.ImStrConsumer;
+import imgui.callback.ImStrSupplier;
+import imgui.flag.*;
 import imgui.gl3.ImGuiImplGl3;
+import me.michqql.game.input.KeyListener;
+import me.michqql.game.input.MouseListener;
+import me.michqql.game.scene.GuiDisplayScene;
+import me.michqql.game.scene.Scene;
 import org.lwjgl.glfw.GLFWCharCallback;
 
+import java.awt.*;
 import java.util.Objects;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -42,12 +44,16 @@ public class GuiManager {
         initImGui();
     }
 
-    public void update(float dt) {
+    public void update(float dt, Scene currentScene) {
         startFrame(dt);
 
         ImGui.newFrame();
-        // Any gui code needs to go here
         ImGui.showDemoWindow();
+        // Any gui code needs to go here
+        if(currentScene instanceof GuiDisplayScene gd) { // also checks if scene is null
+            gd.display();
+            gd.displayForGameObjects(currentScene);
+        }
         // Stop gui code
         ImGui.render();
 
@@ -64,7 +70,7 @@ public class GuiManager {
         // Initialize ImGuiIO config
         final ImGuiIO io = ImGui.getIO();
 
-        io.setIniFilename(null); // We don't want to save .ini file
+        io.setIniFilename("gui.ini");
         io.setConfigFlags(ImGuiConfigFlags.NavEnableKeyboard); // Navigation with keyboard
         io.setBackendFlags(ImGuiBackendFlags.HasMouseCursors); // Mouse cursors to display while resizing windows etc.
         io.setBackendPlatformName("imgui_java_impl_glfw");
@@ -122,6 +128,10 @@ public class GuiManager {
             io.setKeyShift(io.getKeysDown(GLFW_KEY_LEFT_SHIFT) || io.getKeysDown(GLFW_KEY_RIGHT_SHIFT));
             io.setKeyAlt(io.getKeysDown(GLFW_KEY_LEFT_ALT) || io.getKeysDown(GLFW_KEY_RIGHT_ALT));
             io.setKeySuper(io.getKeysDown(GLFW_KEY_LEFT_SUPER) || io.getKeysDown(GLFW_KEY_RIGHT_SUPER));
+
+            if(!io.getWantCaptureKeyboard()) {
+                KeyListener.keyCallback(w, key, scancode, action, mods);
+            }
         });
 
         // FIXME: could be an issue? not sure about closing this callback
@@ -146,11 +156,20 @@ public class GuiManager {
             if (!io.getWantCaptureMouse() && mouseDown[1]) {
                 ImGui.setWindowFocus(null);
             }
+
+            if(!io.getWantCaptureMouse()) {
+                MouseListener.mouseButtonCallback(w, button, action, mods);
+            }
+
         });
 
         glfwSetScrollCallback(windowPtr, (w, xOffset, yOffset) -> {
             io.setMouseWheelH(io.getMouseWheelH() + (float) xOffset);
             io.setMouseWheel(io.getMouseWheel() + (float) yOffset);
+
+            if(!io.getWantCaptureMouse()) {
+                MouseListener.mouseScrollCallback(w, xOffset, yOffset);
+            }
         });
 
         io.setSetClipboardTextFn(new ImStrConsumer() {
@@ -172,40 +191,20 @@ public class GuiManager {
         // Fonts configuration
         // Read: https://raw.githubusercontent.com/ocornut/imgui/master/docs/FONTS.txt
 
-//        final ImFontAtlas fontAtlas = io.getFonts();
-//        final ImFontConfig fontConfig = new ImFontConfig(); // Natively allocated object, should be explicitly destroyed
-//
-//        // Glyphs could be added per-font as well as per config used globally like here
-//        fontConfig.setGlyphRanges(fontAtlas.getGlyphRangesCyrillic());
-//
-//        // Add a default font, which is 'ProggyClean.ttf, 13px'
-//        fontAtlas.addFontDefault();
-//
-//        // Fonts merge example
-//        fontConfig.setMergeMode(true); // When enabled, all fonts added with this config would be merged with the previously added font
-//        fontConfig.setPixelSnapH(true);
-//
-//        fontAtlas.addFontFromMemoryTTF(loadFromResources("basis33.ttf"), 16, fontConfig);
-//
-//        fontConfig.setMergeMode(false);
-//        fontConfig.setPixelSnapH(false);
-//
-//        // Fonts from file/memory example
-//        // We can add new fonts from the file system
-//        fontAtlas.addFontFromFileTTF("src/test/resources/Righteous-Regular.ttf", 14, fontConfig);
-//        fontAtlas.addFontFromFileTTF("src/test/resources/Righteous-Regular.ttf", 16, fontConfig);
-//
-//        // Or directly from the memory
-//        fontConfig.setName("Roboto-Regular.ttf, 14px"); // This name will be displayed in Style Editor
-//        fontAtlas.addFontFromMemoryTTF(loadFromResources("Roboto-Regular.ttf"), 14, fontConfig);
-//        fontConfig.setName("Roboto-Regular.ttf, 16px"); // We can apply a new config value every time we add a new font
-//        fontAtlas.addFontFromMemoryTTF(loadFromResources("Roboto-Regular.ttf"), 16, fontConfig);
-//
-//        fontConfig.destroy(); // After all fonts were added we don't need this config more
-//
-//        // ------------------------------------------------------------
-//        // Use freetype instead of stb_truetype to build a fonts texture
-//        ImGuiFreeType.buildFontAtlas(fontAtlas, ImGuiFreeType.RasterizerFlags.LightHinting);
+        final ImFontAtlas fontAtlas = io.getFonts();
+        final ImFontConfig fontConfig = new ImFontConfig(); // Natively allocated object, should be explicitly destroyed
+
+        // Glyphs could be added per-font as well as per config used globally like here
+        fontConfig.setGlyphRanges(fontAtlas.getGlyphRangesDefault());
+
+        // Add a default font, which is 'ProggyClean.ttf, 13px'
+        //fontAtlas.addFontDefault();
+
+        // Fonts from file/memory example
+        // We can add new fonts from the file system
+        fontAtlas.addFontFromFileTTF("assets/fonts/JetBrainsRegular.ttf", 20, fontConfig);
+
+        fontConfig.destroy(); // After all fonts were added we don't need this config more
 
         // Method initializes LWJGL3 renderer.
         // This method SHOULD be called after you've initialized your ImGui configuration (fonts and so on).
@@ -235,7 +234,7 @@ public class GuiManager {
     private void endFrame() {
         // After Dear ImGui prepared a draw data, we use it in the LWJGL3 renderer.
         // At that moment ImGui will be rendered to the current OpenGL context.
-        imGuiGl3.render(ImGui.getDrawData());
+        imGuiGl3.renderDrawData(ImGui.getDrawData());
     }
 
     // If you want to clean a room after yourself - do it by yourself

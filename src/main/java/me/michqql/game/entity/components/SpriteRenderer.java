@@ -1,6 +1,7 @@
 package me.michqql.game.entity.components;
 
 import me.michqql.game.entity.Component;
+import me.michqql.game.entity.Transform;
 import me.michqql.game.gfx.texture.Sprite;
 import org.joml.Vector4f;
 
@@ -9,8 +10,12 @@ public class SpriteRenderer extends Component {
     private final Vector4f colour;
     private Sprite sprite;
 
-    private Transform lastTransform;
-    private boolean dirty = true;
+    private transient Transform lastTransform;
+    private transient boolean dirty = true;
+
+    public SpriteRenderer() {
+        this.colour = new Vector4f();
+    }
 
     public SpriteRenderer(Vector4f colour) {
         this.colour = colour;

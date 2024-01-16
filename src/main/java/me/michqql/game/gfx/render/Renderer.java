@@ -10,12 +10,27 @@ import java.util.List;
 
 public class Renderer {
 
+    // Static start
+    public static Renderer getDefaultRenderer() {
+        Shader shader = Shader.REGISTRY.get("default.glsl");
+        if(shader == null) {
+            throw new RuntimeException("[Renderer] Static default renderer creation: Default shader does not exist");
+        }
+
+        return new Renderer(shader);
+    }
+    // Static end
+
     private final int MAX_BATCH_SIZE = 1000;
     private final List<RenderBatch> batches = new ArrayList<>();
     private final Shader shader;
 
     public Renderer(Shader shader) {
         this.shader = shader;
+    }
+
+    public Shader getShader() {
+        return shader;
     }
 
     public void add(GameObject gameObject) {

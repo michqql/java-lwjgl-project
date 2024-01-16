@@ -1,5 +1,8 @@
 package me.michqql.game.input;
 
+import me.michqql.game.gfx.Window;
+import org.joml.Vector4f;
+
 import java.awt.*;
 
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
@@ -42,6 +45,17 @@ public class MouseInput implements MouseListener.MouseReceiver {
 
     public static double getMouseY() {
         return mouseY;
+    }
+
+    public static double getOrthographicX() {
+        // x in range (-1, 1)
+        float x = ((float) getMouseX() / Window.getWidth()) * 2.0f - 1.0f;
+        Vector4f tmp = new Vector4f(x, 0, 0, 1);
+        return x;
+    }
+
+    public static double getOrthographicY() {
+        return -1;
     }
 
     public static double getMouseDx() {
