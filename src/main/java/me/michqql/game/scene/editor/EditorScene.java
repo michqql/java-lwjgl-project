@@ -9,6 +9,9 @@ import imgui.type.ImString;
 import me.michqql.game.entity.Component;
 import me.michqql.game.entity.GameObject;
 import me.michqql.game.entity.components.SpriteRenderer;
+import me.michqql.game.gfx.Window;
+import me.michqql.game.gfx.render.Framebuffer;
+import me.michqql.game.gfx.render.PickingTexture;
 import me.michqql.game.gfx.render.debug.DebugDraw;
 import me.michqql.game.gfx.texture.Sprite;
 import me.michqql.game.input.MouseInput;
@@ -16,6 +19,7 @@ import me.michqql.game.scene.GuiDisplayScene;
 import me.michqql.game.scene.Scene;
 import me.michqql.game.scene.editor.custom.CustomEditorHandler;
 import me.michqql.game.scene.editor.custom.SpritePicker;
+import me.michqql.game.scene.editor.module.GameViewport;
 import me.michqql.game.util.Prefab;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -26,6 +30,7 @@ import java.lang.reflect.*;
 import java.util.*;
 
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
+import static org.lwjgl.opengl.GL11.*;
 
 public class EditorScene extends Scene implements GuiDisplayScene {
 
@@ -132,6 +137,15 @@ public class EditorScene extends Scene implements GuiDisplayScene {
     private boolean addingComponent;
     private int selectedComponentIndex = -1;
 
+    // Game window
+    private final Framebuffer framebuffer;
+    private final GameViewport gameViewport;
+
+    public EditorScene() {
+        framebuffer = new Framebuffer(Window.getWidth(), Window.getHeight());
+        gameViewport = new GameViewport(camera, framebuffer);
+    }
+
     @Override
     public void postInit() {
         // Get game object
@@ -141,33 +155,45 @@ public class EditorScene extends Scene implements GuiDisplayScene {
 
     @Override
     public void update(float deltaTime) {
-        if(holdingObject != null) {
-            if(MouseInput.isMouseButtonDown(GLFW_MOUSE_BUTTON_LEFT)) {
-                holdingObject = null;
-                return;
-            }
+        MouseInput.setMouseCaptureRequested(gameViewport.isMouseInViewportArea());
+        updateHeldObject(deltaTime);
+        super.update(deltaTime);
+    }
 
-            final Vector2f pos = holdingObject.getTransform().getPosition();
-            pos.set(camera.getOrthographicX(), camera.getOrthographicY());
-            if(gridSnapping) {
-                pos.sub(pos.x() % gridSize, pos.y() % gridSize);
-            } else {
-                SpriteRenderer sr = holdingObject.getComponent(SpriteRenderer.class);
-                float offX = 16, offY = 16;
-                if(sr != null && sr.getSprite() != null) {
-                    offX = (holdingObject.getTransform().getScale().x) / 2;
-                    offY = (holdingObject.getTransform().getScale().y) / 2;
-                }
+    @Override
+    public void render() {
+        framebuffer.bind(); // Bind to frame buffer before we render
+        // Clear screen colour first to white
+        glClearColor(1f, 1f, 1f, 1f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        super.render();
+    }
 
-                pos.sub(offX, offY);
-            }
-        } else {
-            // Holding object is null, check if user clicked a game object
-            float x = camera.getOrthographicX(), y = camera.getOrthographicY();
-            
+    private void updateHeldObject(float dt) {
+        if(holdingObject == null || !gameViewport.isMouseInViewportArea())
+            return;
+
+        if (MouseInput.isMouseButtonDown(GLFW_MOUSE_BUTTON_LEFT)) {
+            holdingObject = null;
+            return;
         }
 
-        super.update(deltaTime);
+        final Vector2f pos = holdingObject.getTransform().getPosition();
+        pos.set(gameViewport.getAdjustedOrthographicX(), gameViewport.getAdjustedOrthographicY());
+        if(gridSnapping) {
+            // Snap to grid
+            pos.sub(pos.x() % gridSize, pos.y() % gridSize);
+        } else {
+            // Center sprite on mouse position
+            SpriteRenderer sr = holdingObject.getComponent(SpriteRenderer.class);
+            float offX = 16, offY = 16;
+            if(sr != null && sr.getSprite() != null) {
+                offX = (holdingObject.getTransform().getScale().x) / 2;
+                offY = (holdingObject.getTransform().getScale().y) / 2;
+            }
+
+            pos.sub(offX, offY);
+        }
     }
 
     @Override
@@ -175,6 +201,9 @@ public class EditorScene extends Scene implements GuiDisplayScene {
         editLevel();
         editGameObject();
         drawGridLines();
+
+        framebuffer.unbind(); // Unbind frame buffer before draw
+        gameViewport.drawGameViewport();
     }
 
     private void editLevel() {
@@ -196,7 +225,7 @@ public class EditorScene extends Scene implements GuiDisplayScene {
 
             // Grid size slider
             int[] sliderValue = { gridSize };
-            ImGui.sliderInt("Grid Size", sliderValue, 1, 256);
+            ImGui.sliderInt("Grid Size", sliderValue, 12, 256);
             gridSize = sliderValue[0];
 
             ImGui.unindent();
@@ -302,13 +331,13 @@ public class EditorScene extends Scene implements GuiDisplayScene {
         // Draw vertical lines
         for(int i = 0; i < numVertLines; i++) {
             int x = firstX + (gridSize * i);
-            DebugDraw.addLine2D(new Vector2f(x, 0), new Vector2f(x, projSize.y()), new Vector3f());
+            DebugDraw.addLine2D(new Vector2f(x, 0), new Vector2f(x, projSize.y()), new Vector3f(), false, 20);
         }
 
         // Draw horizontal lines
         for(int i = 0; i < numHorLines; i++) {
             int y = firstY + (gridSize * i);
-            DebugDraw.addLine2D(new Vector2f(0, y), new Vector2f(projSize.x, y), new Vector3f());
+            DebugDraw.addLine2D(new Vector2f(0, y), new Vector2f(projSize.x, y), new Vector3f(), false, 20);
         }
     }
 
@@ -422,23 +451,32 @@ public class EditorScene extends Scene implements GuiDisplayScene {
 
     @EditType(String.class)
     private void stringEdit(Object value, Object object, Field field) throws IllegalAccessException {
+        ImGui.text(field.getName() + ": ");
+        ImGui.sameLine();
+
         ImString wrapper = new ImString((String) value);
-        if(ImGui.inputText(field.getName() + ": ", wrapper, ImGuiInputTextFlags.CallbackResize))
+        if(ImGui.inputText("##", wrapper, ImGuiInputTextFlags.CallbackResize))
             field.set(object, wrapper.get());
     }
 
     @EditType(int.class)
     private void intEdit(Object value, Object object, Field field) throws IllegalAccessException {
+        ImGui.text(field.getName() + ": ");
+        ImGui.sameLine();
+
         int[] wrapper = { (int) value };
-        if(ImGui.dragInt(field.getName() + ": ", wrapper))
+        if(ImGui.dragInt("##", wrapper))
             field.set(object, wrapper[0]);
     }
 
     @EditType(Vector4f.class)
     private void vector4fEdit(Object value, Object object, Field field) {
+        ImGui.text(field.getName() + ": ");
+        ImGui.sameLine();
+
         Vector4f vec = (Vector4f) value;
         float[] wrapper = { vec.x, vec.y, vec.z, vec.w };
-        if(ImGui.dragFloat4(field.getName() + ": ", wrapper)) {
+        if(ImGui.dragFloat4("##", wrapper)) {
             vec.set(wrapper);
         }
     }

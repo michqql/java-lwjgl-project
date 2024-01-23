@@ -4,6 +4,7 @@ import me.michqql.game.entity.GameObject;
 import me.michqql.game.entity.components.SpriteRenderer;
 import me.michqql.game.gfx.shader.Shader;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -18,6 +19,11 @@ public class Renderer {
         }
 
         return new Renderer(shader);
+    }
+    private static Shader tempShader;
+
+    public static void setTempShader(@Nullable Shader shader) {
+        tempShader = shader;
     }
     // Static end
 
@@ -65,7 +71,8 @@ public class Renderer {
 
     public void render() {
         for (RenderBatch batch : batches) {
-            batch.render();
+            // Temp shader might be null, in which case the batch will use its default renderer
+            batch.render(tempShader);
         }
     }
 }

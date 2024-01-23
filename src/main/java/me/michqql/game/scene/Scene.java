@@ -73,7 +73,9 @@ public abstract class Scene {
 
             gameObject.update(deltaTime);
         }
+    }
 
+    public void render() {
         renderer.render();
     }
 

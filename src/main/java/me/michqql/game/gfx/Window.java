@@ -1,6 +1,8 @@
 package me.michqql.game.gfx;
 
 import me.michqql.game.gfx.gui.GuiManager;
+import me.michqql.game.gfx.render.PickingTexture;
+import me.michqql.game.gfx.render.Renderer;
 import me.michqql.game.gfx.render.debug.DebugDraw;
 import me.michqql.game.scene.LevelScene;
 import me.michqql.game.scene.Scene;
@@ -26,6 +28,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Window {
 
+    private static final float TARGET_ASPECT_RATIO = 16.0f / 9.0f;
     private static Window instance;
 
     public static Window getInstance() {
@@ -33,9 +36,13 @@ public class Window {
     }
 
     private int width, height;
+    private int updatedWidth, updatedHeight;
     private String title;
 
     private long glfwWindowId;
+
+    // Render
+    private PickingTexture pickingTexture;
 
     // Scene
     private Scene currentScene;
@@ -55,8 +62,12 @@ public class Window {
     }
 
     public void run() {
+        this.updatedWidth = width;
+        this.updatedHeight = height;
+
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
         init();
+        pickingTexture = new PickingTexture(width, height);
         levelScene = new LevelScene();
         //setScene(u -> levelScene);
         editorScene = new EditorScene();
@@ -154,6 +165,21 @@ public class Window {
             // Poll mouse and key events
             glfwPollEvents();
 
+            // Render pass 1: Render to picking texture
+            glDisable(GL_BLEND);
+            pickingTexture.enableWriting();
+            glViewport(0, 0, width, height);
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            // Bind shader to renderer
+            Renderer.setTempShader(pickingTexture.getPickingShader());
+            if(currentScene != null)
+                currentScene.render();
+            pickingTexture.disableWriting();
+            glEnable(GL_BLEND);
+
+            // Render pass 2: Render actual game
+            Renderer.setTempShader(null);
             glClearColor(1f, 1f, 1f, 1f);
             glClear(GL_COLOR_BUFFER_BIT);
 
@@ -162,6 +188,7 @@ public class Window {
 
             if(currentScene != null) {
                 currentScene.update(deltaTime);
+                currentScene.render();
 
                 // Draw the debug lines
                 DebugDraw.draw(currentScene.getCamera());
@@ -169,8 +196,9 @@ public class Window {
 
             // Update gui before swapping buffers
             guiManager.update(deltaTime, currentScene);
-
             glfwSwapBuffers(glfwWindowId);
+
+            //MouseInput.endFrame();
         }
 
         currentScene.save();
@@ -194,5 +222,9 @@ public class Window {
 
     public static int getHeight() {
         return getInstance().height;
+    }
+
+    public static float getTargetAspectRatio() {
+        return TARGET_ASPECT_RATIO;
     }
 }

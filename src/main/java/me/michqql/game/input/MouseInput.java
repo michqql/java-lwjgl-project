@@ -26,6 +26,8 @@ public class MouseInput implements MouseListener.MouseReceiver {
     private static final boolean[] buttonsPressed;
     private static final boolean[] dragging;
 
+    private static boolean mouseCaptureRequest;
+
     static {
         numButtons = MouseInfo.getNumberOfButtons();
         buttonsPressed = new boolean[numButtons];
@@ -37,6 +39,8 @@ public class MouseInput implements MouseListener.MouseReceiver {
         scrollY = 0;
         lastX = mouseX;
         lastY = mouseY;
+
+        mouseCaptureRequest = false;
     }
 
     public static double getMouseX() {
@@ -86,6 +90,14 @@ public class MouseInput implements MouseListener.MouseReceiver {
             return false;
 
         return dragging[button];
+    }
+
+    public static void setMouseCaptureRequested(boolean b) {
+        mouseCaptureRequest = b;
+    }
+
+    public static boolean isMouseCaptureRequested() {
+        return mouseCaptureRequest;
     }
 
     // End of static methods

@@ -5,7 +5,10 @@ import imgui.callback.ImStrConsumer;
 import imgui.callback.ImStrSupplier;
 import imgui.flag.*;
 import imgui.gl3.ImGuiImplGl3;
+import imgui.type.ImBoolean;
+import me.michqql.game.gfx.Window;
 import me.michqql.game.input.KeyListener;
+import me.michqql.game.input.MouseInput;
 import me.michqql.game.input.MouseListener;
 import me.michqql.game.scene.GuiDisplayScene;
 import me.michqql.game.scene.Scene;
@@ -48,6 +51,7 @@ public class GuiManager {
         startFrame(dt);
 
         ImGui.newFrame();
+        setupDockspace();
         ImGui.showDemoWindow();
         // Any gui code needs to go here
         if(currentScene instanceof GuiDisplayScene gd) { // also checks if scene is null
@@ -55,6 +59,7 @@ public class GuiManager {
             gd.displayForGameObjects(currentScene);
         }
         // Stop gui code
+        unsetDockspace();
         ImGui.render();
 
         endFrame();
@@ -72,6 +77,7 @@ public class GuiManager {
 
         io.setIniFilename("gui.ini");
         io.setConfigFlags(ImGuiConfigFlags.NavEnableKeyboard); // Navigation with keyboard
+        io.setConfigFlags(ImGuiConfigFlags.DockingEnable);
         io.setBackendFlags(ImGuiBackendFlags.HasMouseCursors); // Mouse cursors to display while resizing windows etc.
         io.setBackendPlatformName("imgui_java_impl_glfw");
 
@@ -157,7 +163,7 @@ public class GuiManager {
                 ImGui.setWindowFocus(null);
             }
 
-            if(!io.getWantCaptureMouse()) {
+            if(!io.getWantCaptureMouse() || MouseInput.isMouseCaptureRequested()) {
                 MouseListener.mouseButtonCallback(w, button, action, mods);
             }
 
@@ -167,7 +173,7 @@ public class GuiManager {
             io.setMouseWheelH(io.getMouseWheelH() + (float) xOffset);
             io.setMouseWheel(io.getMouseWheel() + (float) yOffset);
 
-            if(!io.getWantCaptureMouse()) {
+            if(!io.getWantCaptureMouse() || MouseInput.isMouseCaptureRequested()) {
                 MouseListener.mouseScrollCallback(w, xOffset, yOffset);
             }
         });
@@ -241,5 +247,26 @@ public class GuiManager {
     public void destroyImGui() {
         imGuiGl3.dispose();
         ImGui.destroyContext();
+    }
+
+    private void setupDockspace() {
+        int windowFlags = ImGuiWindowFlags.MenuBar | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar |
+                        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove |
+                        ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
+
+        ImGui.setNextWindowPos(0.0f, 0.0f, ImGuiCond.Always);
+        ImGui.setNextWindowSize(Window.getWidth(), Window.getHeight());
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowRounding, 0.0f);
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowBorderSize, 0.0f);
+
+        ImGui.begin("Dockspace", new ImBoolean(true), windowFlags);
+        ImGui.popStyleVar(2);
+
+        // Setup actual dockspace
+        ImGui.dockSpace(ImGui.getID("Dockspace"));
+    }
+
+    private void unsetDockspace() {
+        ImGui.end();
     }
 }

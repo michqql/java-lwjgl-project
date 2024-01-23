@@ -44,7 +44,7 @@ public class DebugDraw {
         glVertexAttribPointer(1, 3, GL_FLOAT, false, 6 * Float.BYTES, 3 * Float.BYTES);
         glEnableVertexAttribArray(1);
 
-        glLineWidth(3.0f);
+        //glLineWidth(3.0f);
 
         initialised = true;
     }
@@ -127,8 +127,7 @@ public class DebugDraw {
     }
 
     public static void addBox2D(Vector2f center, Vector2f size, float rotation, Vector3f color,
-                                boolean alwaysDraw,
-                                long lifetime) {
+                                boolean alwaysDraw, long lifetime) {
         final Vector2f halfSize = new Vector2f(size).mul(0.5f);
         Vector2f min = new Vector2f(center).sub(halfSize);
         Vector2f max = new Vector2f(center).add(halfSize);
@@ -140,7 +139,7 @@ public class DebugDraw {
                 new Vector2f(max.x, min.y)
         };
 
-        if(rotation % 90 != 0.0) {
+        if(rotation % 90.0f > 0.005) {
             for(Vector2f vertex : vertices) {
                 MathUtil.rotate(vertex, rotation, center);
             }
@@ -157,5 +156,30 @@ public class DebugDraw {
         addLine2D(vertices[2], vertices[3], color, alwaysDraw, lifetime);
         addLine2D(vertices[3], vertices[0], color, alwaysDraw, lifetime);
 
+    }
+
+    public static void addCircle2D(Vector2f center, float radius, int accuracy, Vector3f color, boolean alwaysDraw,
+                                   long lifetime) {
+        if(accuracy < 3 || accuracy > 100)
+            accuracy = 8;
+
+        Vector2f[] points = new Vector2f[accuracy];
+        float increment = 360f / points.length;
+        float angle = 0f;
+
+        Vector2f tmp;
+        final Vector2f zeroZero = new Vector2f();
+        for(int i = 0; i < points.length; i++) {
+            tmp = new Vector2f(radius, 0);
+            MathUtil.rotate(tmp, angle, zeroZero);
+            points[i] = tmp.add(center);
+
+            angle += increment;
+
+            if(i > 0)
+                addLine2D(points[i - 1], points[i], color, alwaysDraw, lifetime);
+        }
+
+        addLine2D(points[points.length - 1], points[0], color, alwaysDraw, lifetime);
     }
 }

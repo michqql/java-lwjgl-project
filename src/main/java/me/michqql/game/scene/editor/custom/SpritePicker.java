@@ -130,29 +130,4 @@ public class SpritePicker implements CustomEditorHandler {
             ImGui.endPopup();
         }
     }
-
-    /*
-    final int columns = 3;
-            final int rows = (int) Math.ceil((double) spriteList.size() / (double) columns);
-            final int size = spriteList.size();
-            if(ImGui.beginTable("Table", columns)) {
-                int index = 0;
-                for(int row = 0; row < rows; row++) {
-                    ImGui.tableNextRow();
-                    for(int col = 0; col < columns; col++, index++) {
-                        if(index >= size)
-                            break;
-
-                        ImGui.tableSetColumnIndex(col);
-
-                        final Sprite sprite = spriteList.get(index);
-                        final Texture tex = sprite.getTexture();
-
-                        ImGui.image(tex.getTextureId(), tex.getWidth(), tex.getHeight());
-                        //ImGui.image(tex.getTextureId(), tex.getWidth(), tex.getHeight(), sprite.getTextureCoords());
-                    }
-                }
-                ImGui.endTable();
-            }
-     */
 }

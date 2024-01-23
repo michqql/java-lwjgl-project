@@ -70,6 +70,22 @@ public class Texture {
         stbi_image_free(image); // free the memory to avoid a leak
     }
 
+    public Texture(int width, int height) {
+        this.fileName = "null";
+
+        this.width = width;
+        this.height = height;
+
+        this.textureId = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, textureId);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this.width, this.height, 0, GL_RGBA,
+                GL_UNSIGNED_BYTE, 0);
+    }
+
     public String getFileName() {
         return fileName;
     }
