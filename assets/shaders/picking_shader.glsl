@@ -4,7 +4,7 @@ layout (location = 0) in vec2 vPos;
 layout (location = 1) in vec4 vColour;
 layout (location = 2) in vec2 vTextureCoords;
 layout (location = 3) in float vTextureId;
-layout (location = 4) in float vEntityId;
+layout (location = 4) in vec3 vEntityId;
 
 uniform mat4 uProjMatrix;
 uniform mat4 uViewMatrix;
@@ -12,7 +12,7 @@ uniform mat4 uViewMatrix;
 out vec4 fColour;
 out vec2 fTextureCoords;
 out float fTextureId;
-out float fEntityId;
+out vec3 fEntityId;
 
 void main() {
     fColour = vColour;
@@ -27,7 +27,7 @@ void main() {
 in vec4 fColour;
 in vec2 fTextureCoords;
 in float fTextureId;
-in float fEntityId;
+in vec3 fEntityId;
 
 uniform sampler2D uTextures[16];
 
@@ -43,5 +43,5 @@ void main() {
         discard;
     }
 
-    colour = vec4(0.2, 0.5, 0, 1);
+    colour = vec4(fEntityId, 1);
 }

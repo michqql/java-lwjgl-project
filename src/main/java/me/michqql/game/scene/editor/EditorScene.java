@@ -2,11 +2,7 @@ package me.michqql.game.scene.editor;
 
 import imgui.ImGui;
 import imgui.ImVec2;
-import imgui.flag.ImGuiComboFlags;
-import imgui.flag.ImGuiInputTextFlags;
 import imgui.type.ImBoolean;
-import imgui.type.ImString;
-import me.michqql.game.entity.Component;
 import me.michqql.game.entity.GameObject;
 import me.michqql.game.entity.components.SpriteRenderer;
 import me.michqql.game.gfx.Window;
@@ -14,114 +10,23 @@ import me.michqql.game.gfx.render.Framebuffer;
 import me.michqql.game.gfx.render.PickingTexture;
 import me.michqql.game.gfx.render.debug.DebugDraw;
 import me.michqql.game.gfx.texture.Sprite;
+import me.michqql.game.gfx.texture.Texture;
+import me.michqql.game.gfx.texture.TextureAtlas;
 import me.michqql.game.input.MouseInput;
 import me.michqql.game.scene.GuiDisplayScene;
 import me.michqql.game.scene.Scene;
-import me.michqql.game.scene.editor.custom.CustomEditorHandler;
-import me.michqql.game.scene.editor.custom.SpritePicker;
 import me.michqql.game.scene.editor.module.GameViewport;
+import me.michqql.game.scene.editor.module.Inspector;
 import me.michqql.game.util.Prefab;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
-import org.reflections.Reflections;
 
-import java.lang.reflect.*;
 import java.util.*;
 
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 import static org.lwjgl.opengl.GL11.*;
 
 public class EditorScene extends Scene implements GuiDisplayScene {
-
-    // Static
-    // Class, method to edit class type
-    private static final Map<Class<?>, Method> EDITOR_METHOD_CACHE;
-    // Class, handler wrapper
-    private static final Map<Class<?>, CustomEditorHandler.HandlerWrapper> CUSTOM_HANDLER_CACHE;
-    // Name, component class type
-    private static final Map<String, Class<?>> CLASS_NAME_TO_COMPONENT_MAP;
-    private static boolean loaded = false;
-
-    static {
-        // Get edit methods in this class
-        EDITOR_METHOD_CACHE = new HashMap<>();
-        CUSTOM_HANDLER_CACHE = new HashMap<>();
-        CLASS_NAME_TO_COMPONENT_MAP = new HashMap<>();
-    }
-
-    public static void lazyLoad() {
-        if(loaded)
-            return;
-
-        // Get all edit methods
-        Class<?> type = EditorScene.class;
-        Method[] methods = type.getDeclaredMethods();
-        for(Method method : methods) {
-            EditType annotation = method.getAnnotation(EditType.class);
-            if(annotation != null) {
-                if(annotation.handler().equals(CustomEditorHandler.class)) {
-                    // No custom handler is defined, so use the 'primitive' method in this class
-                    EDITOR_METHOD_CACHE.put(annotation.value(), method);
-                } else {
-                    // This class type has a custom handler
-                    Class<? extends CustomEditorHandler> handlerClass = annotation.handler();
-                    try {
-                        Constructor<? extends CustomEditorHandler> constructor = handlerClass.getConstructor();
-                        CustomEditorHandler handler = constructor.newInstance();
-
-                        Method handleMethod = handlerClass.getMethod("handle", Object.class, Object.class, Field.class);
-
-                        CustomEditorHandler.HandlerWrapper wrapper =
-                                new CustomEditorHandler.HandlerWrapper(handlerClass, handler, handleMethod);
-
-                        CUSTOM_HANDLER_CACHE.put(annotation.value(), wrapper);
-                    } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
-                             IllegalAccessException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-        }
-
-        // Get all components
-        Reflections reflections = new Reflections("me.michqql.game.entity");
-        Set<Class<? extends Component>> classes = reflections.getSubTypesOf(Component.class);
-        if(classes != null) {
-            for (Class<?> clazz : classes) {
-                CLASS_NAME_TO_COMPONENT_MAP.put(clazz.getSimpleName(), clazz);
-            }
-        }
-
-        // Ensures this method cant be called again
-        loaded = true;
-    }
-
-    private static void callEditMethod(EditorScene scene, Object value, Object object, Field field) throws InvocationTargetException, IllegalAccessException {
-        if(!loaded) lazyLoad();
-
-        Object callingObject = scene;
-        Method method = EDITOR_METHOD_CACHE.get(field.getType());
-        if(method == null) {
-            // Check custom handler
-            CustomEditorHandler.HandlerWrapper wrapper = CUSTOM_HANDLER_CACHE.get(field.getType());
-            if(wrapper == null)
-                return;
-
-            callingObject = wrapper.getHandler();
-            method = wrapper.getHandleMethod();
-        }
-
-        boolean access = method.canAccess(callingObject);
-        method.setAccessible(true);
-
-        try {
-            method.invoke(callingObject, value, object, field);
-        } finally {
-            method.setAccessible(access);
-        }
-    }
-    // Static end
 
     // Level editor
     private List<Sprite> spriteList;
@@ -133,17 +38,19 @@ public class EditorScene extends Scene implements GuiDisplayScene {
 
     // Game object editor
     private GameObject selectedGameObject = null;
-    private final Map<Class<?>, Field[]> cachedFields = new HashMap<>();
-    private boolean addingComponent;
-    private int selectedComponentIndex = -1;
 
     // Game window
     private final Framebuffer framebuffer;
     private final GameViewport gameViewport;
+    private final Inspector inspector;
 
-    public EditorScene() {
+    public EditorScene(PickingTexture pickingTexture) {
         framebuffer = new Framebuffer(Window.getWidth(), Window.getHeight());
         gameViewport = new GameViewport(camera, framebuffer);
+        inspector = new Inspector(this, gameViewport, pickingTexture);
+
+        Texture tex = Texture.REGISTRY.get("spritesheet.png");
+        TextureAtlas.getTextureAtlas(tex, 32, 32);
     }
 
     @Override
@@ -157,16 +64,27 @@ public class EditorScene extends Scene implements GuiDisplayScene {
     public void update(float deltaTime) {
         MouseInput.setMouseCaptureRequested(gameViewport.isMouseInViewportArea());
         updateHeldObject(deltaTime);
+
+        inspector.update(deltaTime);
+
         super.update(deltaTime);
     }
 
+    // Render method omitted from editor scene
+
+    // Called by the GuiManager last thing in the window loop method
     @Override
-    public void render() {
-        framebuffer.bind(); // Bind to frame buffer before we render
-        // Clear screen colour first to white
+    public void display() {
+        framebuffer.bind();
         glClearColor(1f, 1f, 1f, 1f);
         glClear(GL_COLOR_BUFFER_BIT);
-        super.render();
+        super.render(); // Render to the framebuffer
+        drawGridLines();
+        framebuffer.unbind(); // Unbind frame buffer before draw
+
+        editLevel();
+        gameViewport.display();
+        inspector.display();
     }
 
     private void updateHeldObject(float dt) {
@@ -194,16 +112,6 @@ public class EditorScene extends Scene implements GuiDisplayScene {
 
             pos.sub(offX, offY);
         }
-    }
-
-    @Override
-    public void display() {
-        editLevel();
-        editGameObject();
-        drawGridLines();
-
-        framebuffer.unbind(); // Unbind frame buffer before draw
-        gameViewport.drawGameViewport();
     }
 
     private void editLevel() {
@@ -267,54 +175,6 @@ public class EditorScene extends Scene implements GuiDisplayScene {
         ImGui.end();
     }
 
-    private void editGameObject() {
-        if(selectedGameObject == null) {
-            ImGui.begin("Editing: none");
-            ImGui.text("Select a game object to edit properties");
-            ImGui.end();
-        } else {
-            if(cachedFields.isEmpty())
-                setupCachedFields();
-
-            ImGui.begin("Editing: " + selectedGameObject.getName());
-
-            // If the user is adding a new component to the selected game object, call the method
-            if(addingComponent) {
-                displayAddComponentGui();
-            }
-
-            // Displays the fields for the game object fields
-            ImGui.text("Game Object");
-            displayFields(selectedGameObject);
-
-            ImGui.separator();
-            ImGui.text("Components");
-
-            // Add component button
-            if(ImGui.button("+") && !addingComponent) {
-                addingComponent = true;
-                selectedComponentIndex = -1;
-            }
-
-            for(Component component : selectedGameObject.getComponentList()) {
-                if(ImGui.collapsingHeader(component.getClass().getSimpleName())) {
-                    ImGui.indent();
-                    displayFields(component);
-
-                    // Remove component button
-                    if(ImGui.button("-")) {
-                        selectedGameObject.removeComponent(component.getClass());
-                        break;
-                    }
-
-                    ImGui.unindent();
-                }
-            }
-
-            ImGui.end();
-        }
-    }
-
     private void drawGridLines() {
         if(!gridLines)
             return;
@@ -341,68 +201,6 @@ public class EditorScene extends Scene implements GuiDisplayScene {
         }
     }
 
-    private void displayAddComponentGui() {
-        if(selectedGameObject == null) {
-            addingComponent = false;
-            return;
-        }
-
-        ImGui.beginChild("Add component");
-        ImGui.text("Add component to game object: " + selectedGameObject.getName());
-
-        Set<String> set = CLASS_NAME_TO_COMPONENT_MAP.keySet();
-        String[] strings = new String[set.size()];
-        if(selectedComponentIndex < 0 || selectedComponentIndex >= strings.length)
-            selectedComponentIndex = 0;
-
-        int index = 0;
-        for(String s : set) {
-            strings[index++] = s;
-        }
-
-        String currentItem = strings[selectedComponentIndex];
-        if(ImGui.beginCombo("Component: ", currentItem, ImGuiComboFlags.HeightLarge)) {
-            for(int i = 0; i < strings.length; i++) {
-                boolean selected = currentItem.equals(strings[i]);
-                if(ImGui.selectable(strings[i], selected)) {
-                    currentItem = strings[i];
-                    selectedComponentIndex = i;
-                }
-                if(selected) {
-                    ImGui.setItemDefaultFocus();
-                }
-            }
-            ImGui.endCombo();
-        }
-
-        if(ImGui.button("Add")) {
-            Class<?> componentClass = CLASS_NAME_TO_COMPONENT_MAP.get(currentItem);
-            if(componentClass != null) {
-                try {
-                    Constructor<?> constructor = componentClass.getDeclaredConstructor();
-                    Object obj = constructor.newInstance();
-
-                    if (obj instanceof Component component) {
-                        // Which it should be!
-                        selectedGameObject.addComponent(component);
-                        addingComponent = false;
-                    }
-
-                } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
-                         IllegalAccessException e) {
-
-                }
-            }
-        }
-
-        ImGui.sameLine();
-        if(ImGui.button("Cancel")) {
-            addingComponent = false;
-        }
-
-        ImGui.endChild();
-    }
-
     public void setSelectedGameObject(GameObject selectedGameObject) {
         this.selectedGameObject = selectedGameObject;
     }
@@ -411,81 +209,7 @@ public class EditorScene extends Scene implements GuiDisplayScene {
         return selectedGameObject;
     }
 
-    private void displayFields(Object obj) {
-        Field[] fields = cachedFields.get(obj.getClass());
-        if(fields == null) {
-            // Re-cache the object
-            setupCachedFields();
-            return;
-        }
-
-        for(Field f : fields) {
-            if(Modifier.isStatic(f.getModifiers()) || Modifier.isTransient(f.getModifiers())) continue;
-
-            boolean access = f.canAccess(obj);
-            f.setAccessible(true);
-
-            try {
-                callEditMethod(this, f.get(obj), obj, f);
-            } catch (InvocationTargetException | IllegalAccessException e) {
-                throw new RuntimeException(e);
-            } finally {
-                f.setAccessible(access);
-            }
-        }
-    }
-
-    private void setupCachedFields() {
-        cachedFields.clear();
-
-        // Cache the fields of the game object
-        Field[] fields = selectedGameObject.getClass().getDeclaredFields();
-        cachedFields.put(selectedGameObject.getClass(), fields);
-
-        // Cache the fields of the components of this game object
-        for(Component component : selectedGameObject.getComponentList()) {
-            fields = component.getClass().getDeclaredFields();
-            cachedFields.put(component.getClass(), fields);
-        }
-    }
-
     public GameViewport getGameViewport() {
         return gameViewport;
     }
-
-    // Editor fields
-    @EditType(String.class)
-    private void stringEdit(Object value, Object object, Field field) throws IllegalAccessException {
-        ImGui.text(field.getName() + ": ");
-        ImGui.sameLine();
-
-        ImString wrapper = new ImString((String) value);
-        if(ImGui.inputText("##", wrapper, ImGuiInputTextFlags.CallbackResize))
-            field.set(object, wrapper.get());
-    }
-
-    @EditType(int.class)
-    private void intEdit(Object value, Object object, Field field) throws IllegalAccessException {
-        ImGui.text(field.getName() + ": ");
-        ImGui.sameLine();
-
-        int[] wrapper = { (int) value };
-        if(ImGui.dragInt("##", wrapper))
-            field.set(object, wrapper[0]);
-    }
-
-    @EditType(Vector4f.class)
-    private void vector4fEdit(Object value, Object object, Field field) {
-        ImGui.text(field.getName() + ": ");
-        ImGui.sameLine();
-
-        Vector4f vec = (Vector4f) value;
-        float[] wrapper = { vec.x, vec.y, vec.z, vec.w };
-        if(ImGui.dragFloat4("##", wrapper)) {
-            vec.set(wrapper);
-        }
-    }
-
-    @EditType(value = Sprite.class, handler = SpritePicker.class)
-    private void spriteEdit(Object value, Object object, Field field) {}
 }

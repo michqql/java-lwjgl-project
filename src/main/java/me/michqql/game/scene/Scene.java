@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 public abstract class Scene {
@@ -67,6 +68,13 @@ public abstract class Scene {
         }
     }
 
+    public GameObject getGameObjectByUUID(UUID uuid) {
+        for(GameObject obj : gameObjectList) {
+            if(obj.getUuid().equals(uuid)) return obj;
+        }
+        return null;
+    }
+
     public void update(float deltaTime) {
         for(GameObject gameObject : gameObjectList) {
             gameObject.getAndClearDirtyComponents().forEach(Component::start);
@@ -106,7 +114,7 @@ public abstract class Scene {
     }
 
     // Helper methods
-    protected final void forEachGameObject(Consumer<GameObject> consumer) {
+    public final void forEachGameObject(Consumer<GameObject> consumer) {
         gameObjectList.forEach(consumer);
     }
 

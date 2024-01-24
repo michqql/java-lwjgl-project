@@ -25,6 +25,7 @@ import java.util.function.Function;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_BINDING;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Window {
@@ -71,7 +72,7 @@ public class Window {
         pickingTexture = new PickingTexture(width, height);
         levelScene = new LevelScene();
         //setScene(u -> levelScene);
-        editorScene = new EditorScene();
+        editorScene = new EditorScene(pickingTexture);
         setScene(u -> editorScene);
         loop();
         stop();
@@ -169,7 +170,7 @@ public class Window {
             // Render pass 1: Render to picking texture
             glDisable(GL_BLEND);
             pickingTexture.enableWriting();
-            glViewport(0, 0, width, height);
+            glViewport(0, 0, pickingTexture.getWidth(), pickingTexture.getHeight());
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             // Bind shader to renderer
@@ -181,20 +182,12 @@ public class Window {
                     uploader.floatValue("uTime", Time.getTime());
                 });
                 currentScene.render();
-                if(MouseInput.isMouseButtonDown(GLFW_MOUSE_BUTTON_LEFT)) {
-                    if(currentScene instanceof EditorScene editor) {
-                        int x = (int) editor.getGameViewport().getScreenX();
-                        int y = (int) editor.getGameViewport().getScreenY();
-                        currentScene.renderer.batches.forEach(renderBatch ->
-                                System.out.println(Arrays.toString(renderBatch.readPixel(x, y))));
-                    }
-                }
             }
             pickingTexture.disableWriting();
             glEnable(GL_BLEND);
 
             // Render pass 2: Render actual game
-            Renderer.setTempShader(pickingTexture.getPickingShader());
+            Renderer.setTempShader(null);
             glClearColor(1f, 1f, 1f, 1f);
             glClear(GL_COLOR_BUFFER_BIT);
 

@@ -44,6 +44,10 @@ public class GameObject {
         dirtyComponents.clear();
     }
 
+    public UUID getUuid() {
+        return uuid;
+    }
+
     public String getName() {
         return name;
     }

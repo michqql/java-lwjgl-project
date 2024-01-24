@@ -8,7 +8,7 @@ import static org.lwjgl.opengl.GL30.*;
 public class PickingTexture {
 
     // Static start
-    private static Shader pickingShader = null;
+    private static Shader pickingShader;
 
     static {
         pickingShader = Shader.REGISTRY.get("picking_shader.glsl");
@@ -18,6 +18,8 @@ public class PickingTexture {
     }
     // Static end
 
+    private final int width, height;
+
     private int fboId;
     private int pickingTextureId;
     private int depthTextureId;
@@ -26,6 +28,9 @@ public class PickingTexture {
         if(!init(width, height)) {
             throw new RuntimeException("Error initialising picking texture");
         }
+
+        this.width = width;
+        this.height = height;
     }
 
     private boolean init(int width, int height) {
@@ -42,17 +47,16 @@ public class PickingTexture {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         // Upload empty image
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pickingTextureId, 0);
+        glEnable(GL_TEXTURE_2D);
 
         // Create the depth texture object
-        glEnable(GL_DEPTH_TEST);
         this.depthTextureId = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, depthTextureId);
         // Skip params and upload empty texture
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTextureId, 0);
-        glDisable(GL_DEPTH_TEST);
 
         // Disable the reading
         glReadBuffer(GL_NONE);
@@ -79,8 +83,8 @@ public class PickingTexture {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, fboId);
         glReadBuffer(GL_COLOR_ATTACHMENT0);
 
-        float[] pixels = new float[4];
-        glReadPixels(x, y, 1, 1, GL_RGBA, GL_FLOAT, pixels);
+        float[] pixels = new float[3];
+        glReadPixels(x, y, 1, 1, GL_RGB, GL_FLOAT, pixels);
 
         glReadBuffer(GL_NONE);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
@@ -90,5 +94,13 @@ public class PickingTexture {
 
     public Shader getPickingShader() {
         return pickingShader;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
     }
 }

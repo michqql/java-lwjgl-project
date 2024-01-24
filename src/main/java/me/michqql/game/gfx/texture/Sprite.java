@@ -1,5 +1,6 @@
 package me.michqql.game.gfx.texture;
 
+import me.michqql.game.util.collection.ReadOnlyList;
 import org.joml.Vector2f;
 
 import java.util.ArrayList;
@@ -8,8 +9,9 @@ import java.util.List;
 public class Sprite {
 
     private static final List<Sprite> SPRITE_CACHE = new ArrayList<>();
+    private static final ReadOnlyList<Sprite> READ_ONLY_CACHE = new ReadOnlyList<>(SPRITE_CACHE);
     public static List<Sprite> getSpriteCache() {
-        return SPRITE_CACHE;
+        return READ_ONLY_CACHE; // Controls access to read only
     }
 
     private final Texture texture;

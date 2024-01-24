@@ -28,6 +28,9 @@ public class RenderBatch implements Comparable<RenderBatch> {
     // Vertex layout:
     // Position (x, y),        Colour (r, g, b, a),          Texture Coords (x, y),   Texture Id (id)
     // float, float,           float, float, float, float,   float, float,            float
+
+    // cont -> Entity Id (r, g, b)
+    // cont -> float, float, float
     private static final int POSITION_SIZE = 2;
     private static final int POSITION_OFFSET = 0;
 
@@ -41,7 +44,7 @@ public class RenderBatch implements Comparable<RenderBatch> {
     private static final int TEXTURE_ID_OFFSET =
             TEXTURE_COORDS_OFFSET + TEXTURE_COORDS_SIZE * Float.BYTES;
 
-    private static final int ENTITY_ID_SIZE = 1;
+    private static final int ENTITY_ID_SIZE = 3;
     private static final int ENTITY_ID_OFFSET =
             TEXTURE_ID_OFFSET + TEXTURE_ID_SIZE * Float.BYTES;
 
@@ -212,7 +215,9 @@ public class RenderBatch implements Comparable<RenderBatch> {
             // Load the texture id
             vertices[offset + 8] = textureIndex;
 
-            vertices[offset + 9] = 0.2f;
+            vertices[offset + 9] = 0.5f;
+            vertices[offset + 10] = 0.2f;
+            vertices[offset + 11] = 0.2f;
 
             offset += VERTEX_SIZE;
         }

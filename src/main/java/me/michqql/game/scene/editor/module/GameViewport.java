@@ -9,7 +9,7 @@ import me.michqql.game.gfx.render.Framebuffer;
 import me.michqql.game.input.MouseInput;
 import org.joml.Vector4f;
 
-public class GameViewport {
+public class GameViewport implements EditorModule {
 
     private final Camera camera;
     private final Framebuffer framebuffer;
@@ -31,7 +31,10 @@ public class GameViewport {
         this.windowOffset = new ImVec2();
     }
 
-    public void drawGameViewport() {
+    @Override
+    public void update(float dt) {}
+
+    public void display() {
         int windowFlags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
         ImGui.begin("Game Viewport", windowFlags);
 
