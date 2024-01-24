@@ -13,6 +13,7 @@ import me.michqql.game.scene.editor.EditType;
 import me.michqql.game.scene.editor.EditorScene;
 import me.michqql.game.scene.editor.custom.CustomEditorHandler;
 import me.michqql.game.scene.editor.custom.SpritePicker;
+import me.michqql.game.util.UUIDColourUtil;
 import org.joml.Vector4f;
 import org.reflections.Reflections;
 
@@ -44,7 +45,7 @@ public class Inspector implements EditorModule {
             return;
 
         // Get all edit methods
-        Class<?> type = EditorScene.class;
+        Class<?> type = Inspector.class;
         Method[] methods = type.getDeclaredMethods();
         for(Method method : methods) {
             EditType annotation = method.getAnnotation(EditType.class);
@@ -121,8 +122,7 @@ public class Inspector implements EditorModule {
     private final Map<Class<?>, Field[]> cachedFields = new HashMap<>();
     private boolean addingComponent;
     private int selectedComponentIndex = -1;
-
-    private final HashMap<Integer, UUID> colourToUuidCache = new HashMap<>();
+    private long lastClickTime = 0;
 
     public Inspector(EditorScene editorScene, GameViewport gameViewport,
                      PickingTexture pickingTexture) {
@@ -136,15 +136,22 @@ public class Inspector implements EditorModule {
     @Override
     public void update(float dt) {
         if(MouseInput.isMouseButtonDown(GLFW_MOUSE_BUTTON_LEFT)) {
+            if(System.currentTimeMillis() - lastClickTime < 200)
+                return;
+
             int x = (int) gameViewport.getScreenX();
             int y = (int) gameViewport.getScreenY();
 
             float[] rgb = pickingTexture.readPixel(x, y);
-            int r = (int) rgb[0] * 256;
-            int g = (int) rgb[1] * 256;
-            int b = (int) rgb[2] * 256;
-            int colourCode = (r << 16) & (g << 8) & b;
-
+            Map<float[], UUID> map = getRGB2UUIDMap();
+            UUID uuid = map.get(rgb);
+            if(uuid == null) {
+                setSelectedObject(null);
+            } else {
+                GameObject gameObject = editorScene.getGameObjectByUUID(uuid); // game object shouldn't be null here
+                setSelectedObject(gameObject);
+            }
+            lastClickTime = System.currentTimeMillis();
         }
     }
 
@@ -155,14 +162,14 @@ public class Inspector implements EditorModule {
 
     private void editGameObject() {
         if(selectedObject == null) {
-            ImGui.begin("Editing: none");
+            ImGui.begin("Inspector: none");
             ImGui.textWrapped("Select a game object to edit properties");
             ImGui.end();
         } else {
             if(cachedFields.isEmpty())
                 setupCachedFields();
 
-            ImGui.begin("Editing: " + selectedObject.getName());
+            ImGui.begin("Inspector: " + selectedObject.getName());
 
             // If the user is adding a new component to the selected game object, call the method
             if(addingComponent) {
@@ -301,15 +308,16 @@ public class Inspector implements EditorModule {
         }
     }
 
-    private void cacheGameObjects() {
-        colourToUuidCache.clear();
+    private Map<float[], UUID> getRGB2UUIDMap() {
+        TreeMap<float[], UUID> map = new TreeMap<>(Arrays::compare);
 
         editorScene.forEachGameObject(gameObject -> {
             UUID uuid = gameObject.getUuid();
-            int hash = uuid.hashCode();
-            int colourCode = Math.abs(hash) % 0x1000000;
-            colourToUuidCache.put(colourCode, uuid);
+            float[] arr = UUIDColourUtil.colourFromUUID(uuid);
+            map.put(arr, uuid);
         });
+
+        return map;
     }
 
     public GameObject getSelectedObject() {

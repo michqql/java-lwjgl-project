@@ -4,6 +4,7 @@ import me.michqql.game.entity.components.SpriteRenderer;
 import me.michqql.game.entity.Transform;
 import me.michqql.game.gfx.shader.Shader;
 import me.michqql.game.gfx.texture.Texture;
+import me.michqql.game.util.UUIDColourUtil;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
@@ -11,6 +12,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
@@ -190,6 +192,8 @@ public class RenderBatch implements Comparable<RenderBatch> {
             }
         }
 
+        final UUID uuid = spriteRenderer.getParentGameObject().getUuid();
+        final float[] uuidColour = UUIDColourUtil.colourFromUUID(uuid);
         final Transform transform = spriteRenderer.getParentGameObject().getTransform();
         final Vector4f colour = spriteRenderer.getColour();
         final Vector2f[] textureCoords = spriteRenderer.getSprite().getTextureCoords();
@@ -215,9 +219,9 @@ public class RenderBatch implements Comparable<RenderBatch> {
             // Load the texture id
             vertices[offset + 8] = textureIndex;
 
-            vertices[offset + 9] = 0.5f;
-            vertices[offset + 10] = 0.2f;
-            vertices[offset + 11] = 0.2f;
+            vertices[offset + 9] = uuidColour[0];
+            vertices[offset + 10] = uuidColour[1];
+            vertices[offset + 11] = uuidColour[2];
 
             offset += VERTEX_SIZE;
         }

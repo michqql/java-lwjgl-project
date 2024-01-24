@@ -19,13 +19,11 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL14C;
 
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Function;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_BINDING;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Window {
