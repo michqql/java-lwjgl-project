@@ -14,8 +14,7 @@ import java.util.List;
 
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.glBindVertexArray;
-import static org.lwjgl.opengl.GL30.glGenVertexArrays;
+import static org.lwjgl.opengl.GL30.*;
 
 public class RenderBatch implements Comparable<RenderBatch> {
 
@@ -42,7 +41,12 @@ public class RenderBatch implements Comparable<RenderBatch> {
     private static final int TEXTURE_ID_OFFSET =
             TEXTURE_COORDS_OFFSET + TEXTURE_COORDS_SIZE * Float.BYTES;
 
-    private static final int VERTEX_SIZE = POSITION_SIZE + COLOUR_SIZE + TEXTURE_COORDS_SIZE + TEXTURE_ID_SIZE;
+    private static final int ENTITY_ID_SIZE = 1;
+    private static final int ENTITY_ID_OFFSET =
+            TEXTURE_ID_OFFSET + TEXTURE_ID_SIZE * Float.BYTES;
+
+    private static final int VERTEX_SIZE = POSITION_SIZE + COLOUR_SIZE + TEXTURE_COORDS_SIZE +
+            TEXTURE_ID_SIZE + ENTITY_ID_SIZE;
     private static final int VERTEX_SIZE_IN_BYTES = VERTEX_SIZE * Float.BYTES;
 
     private static final int[] TEXTURE_SLOTS = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -56,7 +60,7 @@ public class RenderBatch implements Comparable<RenderBatch> {
     private int vaoId, vboId;
     private final int maxBatchSize;
     private final Shader shader;
-    private int zIndex;
+    private final int zIndex;
 
     public RenderBatch(@Nonnull Shader shader, int maxBatchSize, int zIndex) {
         this.shader = shader;
@@ -84,18 +88,20 @@ public class RenderBatch implements Comparable<RenderBatch> {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
 
         // Enable buffer attribute pointers
-        shader.getVariables().initVertexAttributes();
-//        glVertexAttribPointer(0, POSITION_SIZE, GL_FLOAT, false, VERTEX_SIZE_IN_BYTES, POSITION_OFFSET);
-//        glEnableVertexAttribArray(0);
-//
-//        glVertexAttribPointer(1, COLOUR_SIZE, GL_FLOAT, false, VERTEX_SIZE_IN_BYTES, COLOUR_OFFSET);
-//        glEnableVertexAttribArray(1);
-//
-//        glVertexAttribPointer(2, TEXTURE_COORDS_SIZE, GL_FLOAT, false, VERTEX_SIZE_IN_BYTES, TEXTURE_COORDS_OFFSET);
-//        glEnableVertexAttribArray(2);
-//
-//        glVertexAttribPointer(3, TEXTURE_ID_SIZE, GL_FLOAT, false, VERTEX_SIZE_IN_BYTES, TEXTURE_ID_OFFSET);
-//        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(0, POSITION_SIZE, GL_FLOAT, false, VERTEX_SIZE_IN_BYTES, POSITION_OFFSET);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, COLOUR_SIZE, GL_FLOAT, false, VERTEX_SIZE_IN_BYTES, COLOUR_OFFSET);
+        glEnableVertexAttribArray(1);
+
+        glVertexAttribPointer(2, TEXTURE_COORDS_SIZE, GL_FLOAT, false, VERTEX_SIZE_IN_BYTES, TEXTURE_COORDS_OFFSET);
+        glEnableVertexAttribArray(2);
+
+        glVertexAttribPointer(3, TEXTURE_ID_SIZE, GL_FLOAT, false, VERTEX_SIZE_IN_BYTES, TEXTURE_ID_OFFSET);
+        glEnableVertexAttribArray(3);
+
+        glVertexAttribPointer(4, ENTITY_ID_SIZE, GL_FLOAT, false, VERTEX_SIZE_IN_BYTES, ENTITY_ID_OFFSET);
+        glEnableVertexAttribArray(4);
     }
 
     public void render(@Nullable Shader useThisShader) {
@@ -127,20 +133,19 @@ public class RenderBatch implements Comparable<RenderBatch> {
         useThisShader.getUploader().intArray("uTextures", TEXTURE_SLOTS);
 
         glBindVertexArray(vaoId);
-        useThisShader.getVariables().initVertexAttributes();
-        //useThisShader.getVariables().enableVertexAttributes();
-//        glEnableVertexAttribArray(0);
-//        glEnableVertexAttribArray(1);
-//        glEnableVertexAttribArray(2);
-//        glEnableVertexAttribArray(3);
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
+        glEnableVertexAttribArray(3);
+        glEnableVertexAttribArray(4);
 
         glDrawElements(GL_TRIANGLES, numSprites * 6, GL_UNSIGNED_INT, 0);
 
-        useThisShader.getVariables().disableVertexAttributes();
-//        glDisableVertexAttribArray(0);
-//        glDisableVertexAttribArray(1);
-//        glDisableVertexAttribArray(2);
-//        glDisableVertexAttribArray(3);
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
+        glDisableVertexAttribArray(3);
+        glDisableVertexAttribArray(4);
         glBindVertexArray(0);
         for (Texture texture : textureIds)
             texture.unbind();
@@ -207,6 +212,8 @@ public class RenderBatch implements Comparable<RenderBatch> {
             // Load the texture id
             vertices[offset + 8] = textureIndex;
 
+            vertices[offset + 9] = 0.2f;
+
             offset += VERTEX_SIZE;
         }
     }
@@ -238,5 +245,18 @@ public class RenderBatch implements Comparable<RenderBatch> {
     @Override
     public int compareTo(@Nonnull RenderBatch o) {
         return zIndex - o.zIndex;
+    }
+
+    public float[] readPixel(int x, int y) {
+        glBindBuffer(GL_READ_BUFFER, vboId);
+        glReadBuffer(GL_ARRAY_BUFFER);
+
+        float[] pixels = new float[4];
+        glReadPixels(x, y, 1, 1, GL_RGBA, GL_FLOAT, pixels);
+
+        glReadBuffer(GL_NONE);
+        glBindBuffer(GL_READ_BUFFER, 0);
+
+        return pixels;
     }
 }

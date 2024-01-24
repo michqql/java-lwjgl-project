@@ -449,6 +449,11 @@ public class EditorScene extends Scene implements GuiDisplayScene {
         }
     }
 
+    public GameViewport getGameViewport() {
+        return gameViewport;
+    }
+
+    // Editor fields
     @EditType(String.class)
     private void stringEdit(Object value, Object object, Field field) throws IllegalAccessException {
         ImGui.text(field.getName() + ": ");

@@ -28,8 +28,6 @@ public class Shader {
     private final ShaderUploader uploader;
     private Consumer<ShaderUploader> preparedUpload = null;
 
-    private ShaderVariables variables;
-
     private Shader(String fileName) throws FileNotFoundException {
         this.shaderFile = new File(SHADER_DIRECTORY, fileName);
         if(!shaderFile.exists() || !shaderFile.isFile()) {
@@ -38,7 +36,6 @@ public class Shader {
         }
 
         uploader = new ShaderUploader(this);
-        variables = new ShaderVariables();
 
         compileShader();
     }
@@ -49,10 +46,6 @@ public class Shader {
 
     public ShaderUploader getUploader() {
         return uploader;
-    }
-
-    public ShaderVariables getVariables() {
-        return variables;
     }
 
     public void useShader() {
@@ -95,13 +88,13 @@ public class Shader {
     private Map<String, CharSequence> parseShaderFile() {
         Map<String, CharSequence> shaderTypeToProgramMap = new HashMap<>();
 
-        try(BufferedReader reader = new BufferedReader(new FileReader(shaderFile))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(shaderFile))) {
             String type;
             String line = reader.readLine();
             StringBuilder builder = null;
 
-            while(line != null) {
-                if(line.startsWith("#type")) {
+            while (line != null) {
+                if (line.startsWith("#type")) {
                     type = line.substring("#type ".length());
                     builder = new StringBuilder();
                     shaderTypeToProgramMap.put(type, builder);
@@ -109,11 +102,7 @@ public class Shader {
                     continue;
                 }
 
-                if(line.startsWith("layout")) {
-                    processLayoutVariable(line);
-                }
-
-                if(builder != null)
+                if (builder != null)
                     builder.append(line).append("\n");
                 line = reader.readLine();
             }
@@ -122,16 +111,6 @@ public class Shader {
         }
 
         return shaderTypeToProgramMap;
-    }
-
-    private void processLayoutVariable(String line) {
-        String[] split = line.split(" ");
-        if(split.length < 2) {
-            throw new ShaderCompileException("Shader variable misconfigured: " + line);
-        }
-
-        String type = split[split.length - 2];
-        variables.addVariable(type);
     }
 
     private void checkShaderCompiledSuccessfully(int shaderId) {

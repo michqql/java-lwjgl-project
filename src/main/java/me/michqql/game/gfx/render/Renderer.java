@@ -28,7 +28,7 @@ public class Renderer {
     // Static end
 
     private final int MAX_BATCH_SIZE = 1000;
-    private final List<RenderBatch> batches = new ArrayList<>();
+    public final List<RenderBatch> batches = new ArrayList<>();
     private final Shader shader;
 
     public Renderer(Shader shader) {

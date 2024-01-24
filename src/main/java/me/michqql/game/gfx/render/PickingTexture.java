@@ -1,5 +1,6 @@
 package me.michqql.game.gfx.render;
 
+import me.michqql.game.gfx.Window;
 import me.michqql.game.gfx.shader.Shader;
 
 import static org.lwjgl.opengl.GL30.*;
@@ -41,16 +42,17 @@ public class PickingTexture {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         // Upload empty image
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pickingTextureId, 0);
 
         // Create the depth texture object
-        glEnable(GL_TEXTURE_2D);
+        glEnable(GL_DEPTH_TEST);
         this.depthTextureId = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, depthTextureId);
         // Skip params and upload empty texture
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTextureId, 0);
+        glDisable(GL_DEPTH_TEST);
 
         // Disable the reading
         glReadBuffer(GL_NONE);
@@ -73,17 +75,17 @@ public class PickingTexture {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     }
 
-    public int readPixel(int x, int y) {
+    public float[] readPixel(int x, int y) {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, fboId);
         glReadBuffer(GL_COLOR_ATTACHMENT0);
 
-        float[] pixels = new float[3];
-        glReadPixels(x, y, 1, 1, GL_RGB, GL_FLOAT, pixels);
+        float[] pixels = new float[4];
+        glReadPixels(x, y, 1, 1, GL_RGBA, GL_FLOAT, pixels);
 
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         glReadBuffer(GL_NONE);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
-        return (int) pixels[0];
+        return pixels;
     }
 
     public Shader getPickingShader() {

@@ -31,7 +31,7 @@ in float fEntityId;
 
 uniform sampler2D uTextures[16];
 
-out vec3 colour;
+out vec4 colour;
 
 void main() {
     vec4 texColor = vec4(1, 1, 1, 1);
@@ -43,5 +43,5 @@ void main() {
         discard;
     }
 
-    colour = vec3(fEntityId, fEntityId, fEntityId);
+    colour = vec4(0.2, 0.5, 0, 1);
 }

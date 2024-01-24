@@ -19,6 +19,7 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL14C;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -173,13 +174,27 @@ public class Window {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             // Bind shader to renderer
             Renderer.setTempShader(pickingTexture.getPickingShader());
-            if(currentScene != null)
+            if(currentScene != null) {
+                pickingTexture.getPickingShader().prepareUploads(uploader -> {
+                    uploader.matrix4f("uProjMatrix", currentScene.getCamera().getProjectionMatrix());
+                    uploader.matrix4f("uViewMatrix", currentScene.getCamera().getViewMatrix());
+                    uploader.floatValue("uTime", Time.getTime());
+                });
                 currentScene.render();
+                if(MouseInput.isMouseButtonDown(GLFW_MOUSE_BUTTON_LEFT)) {
+                    if(currentScene instanceof EditorScene editor) {
+                        int x = (int) editor.getGameViewport().getScreenX();
+                        int y = (int) editor.getGameViewport().getScreenY();
+                        currentScene.renderer.batches.forEach(renderBatch ->
+                                System.out.println(Arrays.toString(renderBatch.readPixel(x, y))));
+                    }
+                }
+            }
             pickingTexture.disableWriting();
             glEnable(GL_BLEND);
 
             // Render pass 2: Render actual game
-            Renderer.setTempShader(null);
+            Renderer.setTempShader(pickingTexture.getPickingShader());
             glClearColor(1f, 1f, 1f, 1f);
             glClear(GL_COLOR_BUFFER_BIT);
 

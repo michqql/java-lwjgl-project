@@ -20,7 +20,7 @@ public abstract class Scene {
 
     protected final Camera camera = new Camera(new Vector2f());
     private boolean running = false;
-    protected Renderer renderer = Renderer.getDefaultRenderer();
+    public Renderer renderer = Renderer.getDefaultRenderer();
     private final List<GameObject> gameObjectList = new ArrayList<>();
 
     /**

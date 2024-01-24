@@ -100,4 +100,12 @@ public class GameViewport {
         tmp.mul(camera.getInverseProjectionMatrix()).mul(camera.getInverseViewMatrix());
         return tmp.y;
     }
+
+    public float getScreenX() {
+        return ((float) (MouseInput.getMouseX() - windowOffset.x) / windowSize.x) * Window.getWidth();
+    }
+
+    public float getScreenY() {
+        return Window.getHeight() - ((float) (MouseInput.getMouseY() - windowOffset.y) / windowSize.y) * Window.getHeight();
+    }
 }
