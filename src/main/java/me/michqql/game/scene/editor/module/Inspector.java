@@ -161,15 +161,15 @@ public class Inspector implements EditorModule {
     }
 
     private void editGameObject() {
+        ImGui.begin("Inspector");
         if(selectedObject == null) {
-            ImGui.begin("Inspector: none");
+            ImGui.text("Inspecting: none");
             ImGui.textWrapped("Select a game object to edit properties");
-            ImGui.end();
         } else {
             if(cachedFields.isEmpty())
                 setupCachedFields();
 
-            ImGui.begin("Inspector: " + selectedObject.getName());
+            ImGui.text("Inspecting: " + selectedObject.getName());
 
             // If the user is adding a new component to the selected game object, call the method
             if(addingComponent) {
@@ -184,6 +184,7 @@ public class Inspector implements EditorModule {
             ImGui.text("Components");
 
             // Add component button
+            ImGui.sameLine();
             if(ImGui.button("+") && !addingComponent) {
                 addingComponent = true;
                 selectedComponentIndex = -1;
@@ -203,9 +204,8 @@ public class Inspector implements EditorModule {
                     ImGui.unindent();
                 }
             }
-
-            ImGui.end();
         }
+        ImGui.end();
     }
 
     private void displayAddComponentGui() {

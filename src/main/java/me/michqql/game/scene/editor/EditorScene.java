@@ -15,6 +15,7 @@ import me.michqql.game.gfx.texture.TextureAtlas;
 import me.michqql.game.input.MouseInput;
 import me.michqql.game.scene.GuiDisplayScene;
 import me.michqql.game.scene.Scene;
+import me.michqql.game.scene.editor.module.EditorCamera;
 import me.michqql.game.scene.editor.module.GameViewport;
 import me.michqql.game.scene.editor.module.Inspector;
 import me.michqql.game.util.Prefab;
@@ -43,11 +44,13 @@ public class EditorScene extends Scene implements GuiDisplayScene {
     private final Framebuffer framebuffer;
     private final GameViewport gameViewport;
     private final Inspector inspector;
+    private final EditorCamera editorCamera;
 
     public EditorScene(PickingTexture pickingTexture) {
         framebuffer = new Framebuffer(Window.getWidth(), Window.getHeight());
         gameViewport = new GameViewport(camera, framebuffer);
         inspector = new Inspector(this, gameViewport, pickingTexture);
+        this.editorCamera = new EditorCamera(camera);
 
         Texture tex = Texture.REGISTRY.get("spritesheet.png");
         TextureAtlas.getTextureAtlas(tex, 32, 32);
@@ -63,9 +66,10 @@ public class EditorScene extends Scene implements GuiDisplayScene {
     @Override
     public void update(float deltaTime) {
         MouseInput.setMouseCaptureRequested(gameViewport.isMouseInViewportArea());
-        updateHeldObject(deltaTime);
+        updateHeldObject();
 
         inspector.update(deltaTime);
+        editorCamera.update(deltaTime);
 
         super.update(deltaTime);
     }
@@ -80,6 +84,7 @@ public class EditorScene extends Scene implements GuiDisplayScene {
         glClear(GL_COLOR_BUFFER_BIT);
         super.render(); // Render to the framebuffer
         drawGridLines();
+        DebugDraw.draw(getCamera());
         framebuffer.unbind(); // Unbind frame buffer before draw
 
         editLevel();
@@ -87,7 +92,7 @@ public class EditorScene extends Scene implements GuiDisplayScene {
         inspector.display();
     }
 
-    private void updateHeldObject(float dt) {
+    private void updateHeldObject() {
         if(holdingObject == null || !gameViewport.isMouseInViewportArea())
             return;
 
@@ -182,22 +187,26 @@ public class EditorScene extends Scene implements GuiDisplayScene {
         Vector2f cameraPos = camera.getPosition();
         Vector2f projSize = camera.getProjectionSize();
 
-        int firstX = ((int) (cameraPos.x() / gridSize) * gridSize);
-        int firstY = ((int) (cameraPos.y() / gridSize) * gridSize);
+        int firstX = ((int) ((cameraPos.x() / gridSize) - 1) * gridSize);
+        int firstY = ((int) ((cameraPos.y() / gridSize) - 1) * gridSize);
 
-        int numVertLines = (int) projSize.x() / gridSize;
-        int numHorLines = (int) projSize.y() / gridSize;
+        int numVertLines = (int) (projSize.x() * camera.getZoom() / gridSize) + 2;
+        int numHorLines = (int) (projSize.y() * camera.getZoom() / gridSize) + 2;
 
         // Draw vertical lines
         for(int i = 0; i < numVertLines; i++) {
             int x = firstX + (gridSize * i);
-            DebugDraw.addLine2D(new Vector2f(x, 0), new Vector2f(x, projSize.y()), new Vector3f(), false, 20);
+            DebugDraw.addLine2D(new Vector2f(x, firstY),
+                    new Vector2f(x, firstY + projSize.y() * camera.getZoom() + gridSize * 2),
+                    new Vector3f(), false, 20);
         }
 
         // Draw horizontal lines
         for(int i = 0; i < numHorLines; i++) {
             int y = firstY + (gridSize * i);
-            DebugDraw.addLine2D(new Vector2f(0, y), new Vector2f(projSize.x, y), new Vector3f(), false, 20);
+            DebugDraw.addLine2D(new Vector2f(firstX, y),
+                    new Vector2f(firstX + projSize.x * camera.getZoom() + gridSize * 2, y),
+                    new Vector3f(), false, 20);
         }
     }
 

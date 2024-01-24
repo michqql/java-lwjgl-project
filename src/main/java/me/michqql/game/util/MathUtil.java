@@ -21,4 +21,8 @@ public class MathUtil {
         vec.x = (float) xPrime;
         vec.y = (float) yPrime;
     }
+
+    public static float lerp(float current, float target, float t) {
+        return current + (target - current) * t;
+    }
 }

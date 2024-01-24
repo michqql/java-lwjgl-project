@@ -39,8 +39,6 @@ public class MouseInput implements MouseListener.MouseReceiver {
         scrollY = 0;
         lastX = mouseX;
         lastY = mouseY;
-
-        mouseCaptureRequest = false;
     }
 
     public static double getMouseX() {

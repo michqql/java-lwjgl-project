@@ -23,7 +23,7 @@ public class KeyboardInput implements KeyListener.Receiver {
     private static final boolean[] lastKeysPressed;
 
     static {
-        numKeys = 256;
+        numKeys = 512;
         keysPressed = new boolean[numKeys];
         lastKeysPressed = new boolean[numKeys];
     }

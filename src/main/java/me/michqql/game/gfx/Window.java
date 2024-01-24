@@ -191,7 +191,6 @@ public class Window {
 
             // Prepare the next frame
             DebugDraw.beginFrame();
-
             if(currentScene != null) {
                 currentScene.update(deltaTime);
                 currentScene.render();
@@ -204,7 +203,7 @@ public class Window {
             guiManager.update(deltaTime, currentScene);
             glfwSwapBuffers(glfwWindowId);
 
-            //MouseInput.endFrame();
+            MouseInput.endFrame();
         }
 
         currentScene.save();
