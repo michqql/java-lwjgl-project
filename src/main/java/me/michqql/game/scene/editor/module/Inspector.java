@@ -129,8 +129,6 @@ public class Inspector implements EditorModule {
         this.editorScene = editorScene;
         this.gameViewport = gameViewport;
         this.pickingTexture = pickingTexture;
-
-        // Build a cache of all scene objects
     }
 
     @Override

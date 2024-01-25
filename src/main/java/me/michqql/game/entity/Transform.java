@@ -8,6 +8,7 @@ public class Transform {
 
     private final Vector2f position;
     private final Vector2f scale;
+    private float rotation;
 
     public Transform() {
         this(new Vector2f(), new Vector2f(1f, 1f));
@@ -28,6 +29,14 @@ public class Transform {
 
     public Vector2f getScale() {
         return scale;
+    }
+
+    public float getRotation() {
+        return rotation;
+    }
+
+    public void setRotation(float rotation) {
+        this.rotation = rotation;
     }
 
     public Transform copy() {

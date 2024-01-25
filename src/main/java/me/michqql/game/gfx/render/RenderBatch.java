@@ -5,6 +5,7 @@ import me.michqql.game.entity.Transform;
 import me.michqql.game.gfx.shader.Shader;
 import me.michqql.game.gfx.texture.Texture;
 import me.michqql.game.util.UUIDColourUtil;
+import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
@@ -195,6 +196,14 @@ public class RenderBatch implements Comparable<RenderBatch> {
         final UUID uuid = spriteRenderer.getParentGameObject().getUuid();
         final float[] uuidColour = UUIDColourUtil.colourFromUUID(uuid);
         final Transform transform = spriteRenderer.getParentGameObject().getTransform();
+        final boolean isRotated = transform.getRotation() != 0.0f;
+        Matrix4f transformMatrix = new Matrix4f().identity();
+        if(isRotated) {
+            transformMatrix.translate(transform.getPosition().x(), transform.getPosition().y(), 0);
+            // Rotate about z-axis
+            transformMatrix.rotate((float) Math.toRadians(transform.getRotation()), 0, 0, 1);
+            transformMatrix.scale(transform.getScale().x(), transform.getScale().y(), 1);
+        }
         final Vector4f colour = spriteRenderer.getColour();
         final Vector2f[] textureCoords = spriteRenderer.getSprite().getTextureCoords();
         for(int i = 0; i < VERTEX_OFFSETS.length; i++) {
