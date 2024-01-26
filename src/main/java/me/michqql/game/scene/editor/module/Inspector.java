@@ -8,12 +8,13 @@ import me.michqql.game.entity.Component;
 import me.michqql.game.entity.GameObject;
 import me.michqql.game.gfx.render.PickingTexture;
 import me.michqql.game.gfx.texture.Sprite;
+import me.michqql.game.input.MouseButton;
 import me.michqql.game.input.MouseInput;
 import me.michqql.game.scene.editor.EditType;
 import me.michqql.game.scene.editor.EditorScene;
 import me.michqql.game.scene.editor.custom.CustomEditorHandler;
 import me.michqql.game.scene.editor.custom.SpritePicker;
-import me.michqql.game.util.UUIDColourUtil;
+import me.michqql.game.util.GameObjectUtil;
 import org.joml.Vector4f;
 import org.reflections.Reflections;
 
@@ -133,22 +134,15 @@ public class Inspector implements EditorModule {
 
     @Override
     public void update(float dt) {
-        if(MouseInput.isMouseButtonDown(GLFW_MOUSE_BUTTON_LEFT)) {
+        if(MouseInput.isMouseButtonDown(MouseButton.LEFT.getButtonCode()) &&
+                !MouseInput.isDragging(MouseButton.LEFT.getButtonCode())) {
             if(System.currentTimeMillis() - lastClickTime < 200)
                 return;
 
             int x = (int) gameViewport.getScreenX();
             int y = (int) gameViewport.getScreenY();
 
-            float[] rgb = pickingTexture.readPixel(x, y);
-            Map<float[], UUID> map = getRGB2UUIDMap();
-            UUID uuid = map.get(rgb);
-            if(uuid == null) {
-                setSelectedObject(null);
-            } else {
-                GameObject gameObject = editorScene.getGameObjectByUUID(uuid); // game object shouldn't be null here
-                setSelectedObject(gameObject);
-            }
+            setSelectedObject(GameObjectUtil.getClickedGameObject(editorScene, pickingTexture, x, y));
             lastClickTime = System.currentTimeMillis();
         }
     }
@@ -304,18 +298,6 @@ public class Inspector implements EditorModule {
             fields = component.getClass().getDeclaredFields();
             cachedFields.put(component.getClass(), fields);
         }
-    }
-
-    private Map<float[], UUID> getRGB2UUIDMap() {
-        TreeMap<float[], UUID> map = new TreeMap<>(Arrays::compare);
-
-        editorScene.forEachGameObject(gameObject -> {
-            UUID uuid = gameObject.getUuid();
-            float[] arr = UUIDColourUtil.colourFromUUID(uuid);
-            map.put(arr, uuid);
-        });
-
-        return map;
     }
 
     public GameObject getSelectedObject() {

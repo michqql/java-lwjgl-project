@@ -17,6 +17,7 @@ public class GameObject {
     private final List<Component> componentList = new ArrayList<>();
     private transient final List<Component> dirtyComponents = new ArrayList<>();
     private int zIndex;
+    private boolean persistent = true;
 
     public GameObject(String name) {
         this.name = name;
@@ -107,5 +108,13 @@ public class GameObject {
 
     public void setZIndex(int zIndex) {
         this.zIndex = zIndex;
+    }
+
+    public boolean isPersistent() {
+        return persistent;
+    }
+
+    public void setPersistent(boolean persistent) {
+        this.persistent = persistent;
     }
 }

@@ -56,7 +56,7 @@ public class EditorScene extends Scene implements GuiDisplayScene {
         Texture gizmoTexture = Texture.REGISTRY.get("gizmos.png");
         TextureAtlas atlas = TextureAtlas.getTextureAtlas(gizmoTexture, 24, 48);
         Sprite arrowSprite = atlas.getSprite(1);
-        this.translateGizmo = new TranslateGizmo(this, inspector, arrowSprite);
+        this.translateGizmo = new TranslateGizmo(this, pickingTexture, gameViewport, inspector, arrowSprite);
 
         Texture tex = Texture.REGISTRY.get("spritesheet.png");
         TextureAtlas.getTextureAtlas(tex, 32, 32);

@@ -4,7 +4,7 @@ import me.michqql.game.entity.components.SpriteRenderer;
 import me.michqql.game.entity.Transform;
 import me.michqql.game.gfx.shader.Shader;
 import me.michqql.game.gfx.texture.Texture;
-import me.michqql.game.util.UUIDColourUtil;
+import me.michqql.game.util.GameObjectUtil;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
@@ -194,10 +194,11 @@ public class RenderBatch implements Comparable<RenderBatch> {
         }
 
         final UUID uuid = spriteRenderer.getParentGameObject().getUuid();
-        final float[] uuidColour = UUIDColourUtil.colourFromUUID(uuid);
+        final float[] uuidColour = GameObjectUtil.colourFromUUID(uuid);
         final Transform transform = spriteRenderer.getParentGameObject().getTransform();
         final boolean isRotated = transform.getRotation() != 0.0f;
         Matrix4f transformMatrix = new Matrix4f().identity();
+        Vector4f currentPos;
         if(isRotated) {
             transformMatrix.translate(transform.getPosition().x(), transform.getPosition().y(), 0);
             // Rotate about z-axis
@@ -209,10 +210,20 @@ public class RenderBatch implements Comparable<RenderBatch> {
         for(int i = 0; i < VERTEX_OFFSETS.length; i++) {
             Vector2f offsets = VERTEX_OFFSETS[i];
 
+            currentPos = new Vector4f(
+                    transform.getPosition().x() + offsets.x() * transform.getScale().x(),
+                    transform.getPosition().y() + offsets.y() * transform.getScale().y(),
+                    0, 1
+            );
+            if(isRotated) {
+                currentPos = new Vector4f(offsets.x(), offsets.y(), 0, 1).mul(transformMatrix);
+            }
+
             // Load the position
-            vertices[offset] = transform.getPosition().x() + offsets.x() * transform.getScale().x();
-            vertices[offset + 1] = transform.getPosition().y() +
-                    offsets.y() * transform.getScale().y();
+            vertices[offset] = currentPos.x();
+            vertices[offset + 1] = currentPos.y();
+            //vertices[offset] = transform.getPosition().x() + offsets.x() * transform.getScale().x();
+            //vertices[offset + 1] = transform.getPosition().y() + offsets.y() * transform.getScale().y();
 
             // Load the colour
             vertices[offset + 2] = colour.x();

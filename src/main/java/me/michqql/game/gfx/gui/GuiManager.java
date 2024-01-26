@@ -8,6 +8,7 @@ import imgui.gl3.ImGuiImplGl3;
 import imgui.type.ImBoolean;
 import me.michqql.game.gfx.Window;
 import me.michqql.game.input.KeyListener;
+import me.michqql.game.input.KeyboardInput;
 import me.michqql.game.input.MouseInput;
 import me.michqql.game.input.MouseListener;
 import me.michqql.game.scene.GuiDisplayScene;
@@ -135,7 +136,7 @@ public class GuiManager {
             io.setKeyAlt(io.getKeysDown(GLFW_KEY_LEFT_ALT) || io.getKeysDown(GLFW_KEY_RIGHT_ALT));
             io.setKeySuper(io.getKeysDown(GLFW_KEY_LEFT_SUPER) || io.getKeysDown(GLFW_KEY_RIGHT_SUPER));
 
-            if(!io.getWantCaptureKeyboard()) {
+            if(!io.getWantCaptureKeyboard() || KeyboardInput.isKeyCaptureRequested()) {
                 KeyListener.keyCallback(w, key, scancode, action, mods);
             }
         });

@@ -36,7 +36,7 @@ public class Transform {
     }
 
     public void setRotation(float rotation) {
-        this.rotation = rotation;
+        this.rotation = rotation % 360;
     }
 
     public Transform copy() {

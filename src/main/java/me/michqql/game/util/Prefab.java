@@ -18,4 +18,14 @@ public class Prefab {
 
         return obj;
     }
+
+    public static GameObject generateNonPersistentSpriteObject(Sprite sprite, float sizeX, float sizeY) {
+        GameObject obj = new GameObject("Generated_Sprite_Object", UUID.randomUUID(),
+                new Transform(new Vector2f(), new Vector2f(sizeX, sizeY)), 0);
+        obj.setPersistent(false);
+        SpriteRenderer renderer = new SpriteRenderer(sprite);
+        obj.addComponent(renderer);
+
+        return obj;
+    }
 }

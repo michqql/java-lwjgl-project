@@ -22,6 +22,8 @@ public class KeyboardInput implements KeyListener.Receiver {
     private static final boolean[] keysPressed;
     private static final boolean[] lastKeysPressed;
 
+    private static boolean keyCaptureRequest;
+
     static {
         numKeys = 512;
         keysPressed = new boolean[numKeys];
@@ -33,6 +35,14 @@ public class KeyboardInput implements KeyListener.Receiver {
             return false;
 
         return keysPressed[key];
+    }
+
+    public static void setKeyCaptureRequested(boolean b) {
+        keyCaptureRequest = b;
+    }
+
+    public static boolean isKeyCaptureRequested() {
+        return keyCaptureRequest;
     }
 
     // End of static

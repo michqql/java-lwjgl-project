@@ -94,7 +94,11 @@ public abstract class Scene {
 
     public void save() {
         try(FileWriter fw = new FileWriter("level.json")) {
-            fw.write(Serializer.gson().toJson(gameObjectList));
+            List<GameObject> persistentGOs = new ArrayList<>();
+            for(GameObject go : gameObjectList) {
+                if(go.isPersistent()) persistentGOs.add(go);
+            }
+            fw.write(Serializer.gson().toJson(persistentGOs));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -105,7 +109,10 @@ public abstract class Scene {
             String json = new String(Files.readAllBytes(Paths.get("level.json")));
 
             GameObject[] gos = Serializer.gson().fromJson(json, GameObject[].class);
-            for (GameObject go : gos) addGameObject(go);
+            for (GameObject go : gos) {
+                if(go != null)
+                    addGameObject(go);
+            }
 
             return true;
         } catch (IOException e) {
