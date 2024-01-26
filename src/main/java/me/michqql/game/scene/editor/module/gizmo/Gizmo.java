@@ -1,6 +1,7 @@
 package me.michqql.game.scene.editor.module.gizmo;
 
 import me.michqql.game.entity.GameObject;
+import me.michqql.game.entity.components.NonSelectable;
 import me.michqql.game.entity.components.SpriteRenderer;
 import me.michqql.game.gfx.render.PickingTexture;
 import me.michqql.game.gfx.texture.Sprite;
@@ -16,7 +17,6 @@ import me.michqql.game.util.Prefab;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT;
 
 public class Gizmo implements EditorModule {
@@ -32,7 +32,6 @@ public class Gizmo implements EditorModule {
     private final EditorScene editorScene;
     private final PickingTexture pickingTexture;
     private final GameViewport gameViewport;
-    private final Inspector inspector;
 
     private final GameObject xAxisGizmo;
     private final SpriteRenderer xAxisSprite;
@@ -44,16 +43,18 @@ public class Gizmo implements EditorModule {
     private float worldX, worldY, lastWorldX, lastWorldY;
 
     public Gizmo(EditorScene editorScene, PickingTexture pickingTexture, GameViewport gameViewport,
-                          Inspector inspector, Sprite sprite) {
+                          Sprite sprite) {
         this.editorScene = editorScene;
         this.pickingTexture = pickingTexture;
         this.gameViewport = gameViewport;
-        this.inspector = inspector;
 
         this.xAxisGizmo = Prefab.generateNonPersistentSpriteObject(sprite, 16, 48);
+        xAxisGizmo.addComponent(new NonSelectable());
         this.xAxisSprite = xAxisGizmo.getComponent(SpriteRenderer.class);
         xAxisGizmo.setZIndex(Integer.MAX_VALUE);
+
         this.yAxisGizmo = Prefab.generateNonPersistentSpriteObject(sprite, 16, 48);
+        yAxisGizmo.addComponent(new NonSelectable());
         this.yAxisSprite = yAxisGizmo.getComponent(SpriteRenderer.class);
         yAxisGizmo.setZIndex(Integer.MAX_VALUE);
 
@@ -68,8 +69,6 @@ public class Gizmo implements EditorModule {
 
     @Override
     public void update(float dt) {
-        setSelectedObject(inspector.getSelectedObject());
-
         if(selectedObject != null) {
             // Save compute power, only do these calculations if there is an object selected
             lastWorldX = worldX;
@@ -79,14 +78,15 @@ public class Gizmo implements EditorModule {
 
             // Position the gizmos correctly
             xAxisGizmo.getTransform().getPosition().set(selectedObject.getTransform().getPosition())
-                    .add(
-                            xAxisGizmo.getTransform().getScale().x() + selectedObject.getTransform().getScale().x() * 1.6f,
-                            selectedObject.getTransform().getScale().y() / 2f - xAxisGizmo.getTransform().getScale().x() / 2f
-                    );
+                    .add(selectedObject.getTransform().getScale().x() +
+                            xAxisGizmo.getTransform().getScale().y(),
+                            selectedObject.getTransform().getScale().y() / 2f -
+                                    xAxisGizmo.getTransform().getScale().x() / 2f);
             yAxisGizmo.getTransform().getPosition().set(selectedObject.getTransform().getPosition())
-                    .add(
-                            selectedObject.getTransform().getScale().x() - yAxisGizmo.getTransform().getScale().x() / 2f,
-                            yAxisGizmo.getTransform().getScale().y() + selectedObject.getTransform().getScale().y() * 0.6f
+                    .add(selectedObject.getTransform().getScale().x() / 2f +
+                            yAxisGizmo.getTransform().getScale().x() / 2f,
+                            selectedObject.getTransform().getScale().y() +
+                                    yAxisGizmo.getTransform().getScale().y()
                     );
 
             // Check if gizmos are hovered
@@ -133,7 +133,8 @@ public class Gizmo implements EditorModule {
     }
 
     public void setSelectedObject(GameObject selectedObject) {
-        if(selectedObject == xAxisGizmo || selectedObject == yAxisGizmo) {
+        if(selectedObject == xAxisGizmo || selectedObject == yAxisGizmo ||
+                (selectedObject != null && selectedObject.getComponent(NonSelectable.class) != null)) {
             return;
         }
 

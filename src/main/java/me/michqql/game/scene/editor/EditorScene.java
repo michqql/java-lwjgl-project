@@ -18,7 +18,8 @@ import me.michqql.game.scene.Scene;
 import me.michqql.game.scene.editor.module.EditorCamera;
 import me.michqql.game.scene.editor.module.GameViewport;
 import me.michqql.game.scene.editor.module.Inspector;
-import me.michqql.game.scene.editor.module.TranslateGizmo;
+import me.michqql.game.scene.editor.module.gizmo.GizmoModule;
+import me.michqql.game.scene.editor.module.gizmo.TranslateGizmo;
 import me.michqql.game.util.Prefab;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -46,7 +47,7 @@ public class EditorScene extends Scene implements GuiDisplayScene {
     private final GameViewport gameViewport;
     private final Inspector inspector;
     private final EditorCamera editorCamera;
-    private final TranslateGizmo translateGizmo;
+    private final GizmoModule gizmos;
 
     public EditorScene(PickingTexture pickingTexture) {
         this.framebuffer = new Framebuffer(Window.getWidth(), Window.getHeight());
@@ -56,7 +57,9 @@ public class EditorScene extends Scene implements GuiDisplayScene {
         Texture gizmoTexture = Texture.REGISTRY.get("gizmos.png");
         TextureAtlas atlas = TextureAtlas.getTextureAtlas(gizmoTexture, 24, 48);
         Sprite arrowSprite = atlas.getSprite(1);
-        this.translateGizmo = new TranslateGizmo(this, pickingTexture, gameViewport, inspector, arrowSprite);
+        Sprite blockSprite = atlas.getSprite(2);
+        this.gizmos = new GizmoModule(this, pickingTexture, gameViewport, inspector,
+                arrowSprite, blockSprite);
 
         Texture tex = Texture.REGISTRY.get("spritesheet.png");
         TextureAtlas.getTextureAtlas(tex, 32, 32);
@@ -76,7 +79,7 @@ public class EditorScene extends Scene implements GuiDisplayScene {
 
         inspector.update(deltaTime);
         editorCamera.update(deltaTime);
-        translateGizmo.update(deltaTime);
+        gizmos.update(deltaTime);
 
         super.update(deltaTime);
     }
