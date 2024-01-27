@@ -51,12 +51,12 @@ public class Gizmo implements EditorModule {
         this.xAxisGizmo = Prefab.generateNonPersistentSpriteObject(sprite, 16, 48);
         xAxisGizmo.addComponent(new NonSelectable());
         this.xAxisSprite = xAxisGizmo.getComponent(SpriteRenderer.class);
-        xAxisGizmo.setZIndex(Integer.MAX_VALUE);
+        xAxisGizmo.getTransform().setZIndex(Integer.MAX_VALUE);
 
         this.yAxisGizmo = Prefab.generateNonPersistentSpriteObject(sprite, 16, 48);
         yAxisGizmo.addComponent(new NonSelectable());
         this.yAxisSprite = yAxisGizmo.getComponent(SpriteRenderer.class);
-        yAxisGizmo.setZIndex(Integer.MAX_VALUE);
+        yAxisGizmo.getTransform().setZIndex(Integer.MAX_VALUE);
 
         editorScene.addGameObject(xAxisGizmo);
         editorScene.addGameObject(yAxisGizmo);

@@ -20,7 +20,6 @@ public class GameObjectTypeAdaptor implements JsonSerializer<GameObject>, JsonDe
         obj.addProperty("name", src.getName());
         obj.addProperty("uuid", src.getUuid().toString());
         obj.add("transform", context.serialize(src.getTransform(), Transform.class));
-        obj.addProperty("zIndex", src.getZIndex());
 
         JsonArray components = new JsonArray();
         obj.add("componentList", components);
@@ -37,10 +36,9 @@ public class GameObjectTypeAdaptor implements JsonSerializer<GameObject>, JsonDe
         String name = obj.get("name").getAsString();
         UUID uuid = Serializer.gson().fromJson(obj.get("uuid"), UUID.class);
         Transform transform = context.deserialize(obj.get("transform"), Transform.class);
-        int zIndex = context.deserialize(obj.get("zIndex"), int.class);
         JsonArray components = obj.get("componentList").getAsJsonArray();
 
-        final GameObject go = new GameObject(name, uuid, transform, zIndex);
+        final GameObject go = new GameObject(name, uuid, transform);
         for(JsonElement elem : components) {
             Component c = context.deserialize(elem, Component.class);
             go.addComponent(c);

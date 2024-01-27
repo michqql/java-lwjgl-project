@@ -2,10 +2,8 @@ package me.michqql.game.entity;
 
 import me.michqql.game.util.collection.FastEmptyList;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import javax.annotation.Nonnull;
+import java.util.*;
 
 public class GameObject {
 
@@ -16,7 +14,6 @@ public class GameObject {
     private final Transform transform;
     private final List<Component> componentList = new ArrayList<>();
     private transient final List<Component> dirtyComponents = new ArrayList<>();
-    private int zIndex;
     private boolean persistent = true;
 
     public GameObject(String name) {
@@ -25,11 +22,10 @@ public class GameObject {
         this.transform = new Transform();
     }
 
-    public GameObject(String name, UUID uuid, Transform transform, int zIndex) {
+    public GameObject(String name, UUID uuid, @Nonnull Transform transform) {
         this.name = name;
-        this.uuid = uuid;
-        this.transform = transform;
-        this.zIndex = zIndex;
+        this.uuid = Objects.requireNonNull(uuid);
+        this.transform = Objects.requireNonNull(transform);
     }
 
     public void update(float dt) {
@@ -53,6 +49,7 @@ public class GameObject {
         return name;
     }
 
+    @Nonnull
     public Transform getTransform() {
         return transform;
     }
@@ -100,14 +97,6 @@ public class GameObject {
         List<Component> dirtyCopy = new ArrayList<>(dirtyComponents);
         dirtyComponents.clear();
         return dirtyCopy;
-    }
-
-    public int getZIndex() {
-        return zIndex;
-    }
-
-    public void setZIndex(int zIndex) {
-        this.zIndex = zIndex;
     }
 
     public boolean isPersistent() {

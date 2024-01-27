@@ -9,6 +9,7 @@ public class Transform {
     private final Vector2f position;
     private final Vector2f scale;
     private float rotation;
+    private int zIndex;
 
     public Transform() {
         this(new Vector2f(), new Vector2f(1f, 1f));
@@ -37,6 +38,14 @@ public class Transform {
 
     public void setRotation(float rotation) {
         this.rotation = rotation % 360;
+    }
+
+    public int getZIndex() {
+        return zIndex;
+    }
+
+    public void setZIndex(int zIndex) {
+        this.zIndex = zIndex;
     }
 
     public Transform copy() {
