@@ -1,5 +1,6 @@
 package me.michqql.game.scene.editor.module.gizmo;
 
+import me.michqql.game.entity.Transform;
 import me.michqql.game.gfx.render.PickingTexture;
 import me.michqql.game.gfx.texture.Sprite;
 import me.michqql.game.scene.editor.EditorScene;
@@ -21,5 +22,27 @@ public class TranslateGizmo extends Gizmo {
         Vector2f dir = getDragDirection();
 
         getSelectedObject().getTransform().getPosition().sub(diff.mul(dir));
+    }
+
+    @Override
+    protected void onGizmoRelease() {
+        if(editorScene.isGridSnappingEnabled()) {
+            Vector2f pos = getSelectedObject().getTransform().getPosition();
+            Vector2f diff = new Vector2f(pos.x() % editorScene.getGridSize(), pos.y() % editorScene.getGridSize())
+                            .mul(getDragDirection());
+
+            if(diff.x() > editorScene.getGridSize() / 2f) {
+                // Snap upwards
+                pos.add(editorScene.getGridSize() - diff.x(), 0);
+                diff.x = 0;
+            }
+
+            if(diff.y() > editorScene.getGridSize() / 2f) {
+                pos.add(0, editorScene.getGridSize() - diff.y());
+                diff.y = 0;
+            }
+
+            pos.sub(diff);
+        }
     }
 }

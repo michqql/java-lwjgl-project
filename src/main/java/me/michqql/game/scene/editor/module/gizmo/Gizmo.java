@@ -29,7 +29,7 @@ public class Gizmo implements EditorModule {
     private static final Vector4f X_AXIS_COLOUR_HOVER = new Vector4f(1, 1, 0, 1);
     private static final Vector4f Y_AXIS_COLOUR_HOVER = new Vector4f(1, 1, 0, 1);
 
-    private final EditorScene editorScene;
+    protected final EditorScene editorScene;
     private final PickingTexture pickingTexture;
     private final GameViewport gameViewport;
 
@@ -66,6 +66,7 @@ public class Gizmo implements EditorModule {
     }
 
     protected void onGizmoDrag() {}
+    protected void onGizmoRelease() {}
 
     @Override
     public void update(float dt) {
@@ -117,6 +118,10 @@ public class Gizmo implements EditorModule {
                 onGizmoDrag();
             } else {
                 // Reset dragging
+                if(xAxisDragging || yAxisDragging) {
+                    // Only call release event if they were dragging
+                    onGizmoRelease();
+                }
                 xAxisDragging = false;
                 yAxisDragging = false;
             }

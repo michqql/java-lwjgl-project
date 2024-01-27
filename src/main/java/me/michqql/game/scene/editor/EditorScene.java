@@ -231,4 +231,12 @@ public class EditorScene extends Scene implements GuiDisplayScene {
     public GameViewport getGameViewport() {
         return gameViewport;
     }
+
+    public int getGridSize() {
+        return gridSize;
+    }
+
+    public boolean isGridSnappingEnabled() {
+        return gridSnapping;
+    }
 }
