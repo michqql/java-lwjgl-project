@@ -27,11 +27,16 @@ public class RenderBatch implements Comparable<RenderBatch> {
             new Vector2f(0f, 0f), // bottom-left
             new Vector2f(0f, 1f)  // top-left
     };
+    //private static final Vector2f[] VERTEX_OFFSETS = {
+    //            new Vector2f(0.5f, 0.5f), // top-right
+    //            new Vector2f(0.5f, -0.5f), // bottom-right
+    //            new Vector2f(-0.5f, -0.5f), // bottom-left
+    //            new Vector2f(-0.5f, 0.5f)  // top-left
+    //    };
 
     // Vertex layout:
     // Position (x, y),        Colour (r, g, b, a),          Texture Coords (x, y),   Texture Id (id)
     // float, float,           float, float, float, float,   float, float,            float
-
     // cont -> Entity Id (r, g, b)
     // cont -> float, float, float
     private static final int POSITION_SIZE = 2;
@@ -217,7 +222,9 @@ public class RenderBatch implements Comparable<RenderBatch> {
         if(isRotated) {
             transformMatrix.translate(transform.getPosition().x(), transform.getPosition().y(), 0);
             // Rotate about z-axis
+            transformMatrix.translate(transform.getScale().x() / 2f, transform.getScale().y() / 2f, 0);
             transformMatrix.rotate((float) Math.toRadians(transform.getRotation()), 0, 0, 1);
+            transformMatrix.translate(-(transform.getScale().x() / 2f), -(transform.getScale().y() / 2f), 0);
             transformMatrix.scale(transform.getScale().x(), transform.getScale().y(), 1);
         }
         final Vector4f colour = spriteRenderer.getColour();

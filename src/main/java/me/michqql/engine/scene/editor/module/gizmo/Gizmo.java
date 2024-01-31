@@ -47,12 +47,12 @@ public class Gizmo implements EditorModule {
         this.pickingTexture = pickingTexture;
         this.gameViewport = gameViewport;
 
-        this.xAxisGizmo = Prefab.generateNonPersistentSpriteObject(sprite, 16, 48);
+        this.xAxisGizmo = Prefab.generateNonPersistentSpriteObject(sprite, 16 * 25/3200f, 48 * 25/3200f);
         xAxisGizmo.addComponent(new NonSelectable());
         this.xAxisSprite = xAxisGizmo.getComponent(SpriteRenderer.class);
         xAxisGizmo.getTransform().setZIndex(Integer.MAX_VALUE);
 
-        this.yAxisGizmo = Prefab.generateNonPersistentSpriteObject(sprite, 16, 48);
+        this.yAxisGizmo = Prefab.generateNonPersistentSpriteObject(sprite, 16 * 25/3200f, 48 * 25/3200f);
         yAxisGizmo.addComponent(new NonSelectable());
         this.yAxisSprite = yAxisGizmo.getComponent(SpriteRenderer.class);
         yAxisGizmo.getTransform().setZIndex(Integer.MAX_VALUE);
@@ -78,15 +78,14 @@ public class Gizmo implements EditorModule {
 
             // Position the gizmos correctly
             xAxisGizmo.getTransform().getPosition().set(selectedObject.getTransform().getPosition())
-                    .add(selectedObject.getTransform().getScale().x() +
+                    .add(
                             xAxisGizmo.getTransform().getScale().y(),
-                            selectedObject.getTransform().getScale().y() / 2f -
-                                    xAxisGizmo.getTransform().getScale().x() / 2f);
+                            (xAxisGizmo.getTransform().getScale().x() / 2f) - (selectedObject.getTransform().getScale().y() / 2f)
+                    );
             yAxisGizmo.getTransform().getPosition().set(selectedObject.getTransform().getPosition())
-                    .add(selectedObject.getTransform().getScale().x() / 2f +
-                            yAxisGizmo.getTransform().getScale().x() / 2f,
-                            selectedObject.getTransform().getScale().y() +
-                                    yAxisGizmo.getTransform().getScale().y()
+                    .add(
+                            (selectedObject.getTransform().getScale().x() / 2f) - (yAxisGizmo.getTransform().getScale().x() / 2f),
+                            selectedObject.getTransform().getScale().y()
                     );
 
             // Check if gizmos are hovered

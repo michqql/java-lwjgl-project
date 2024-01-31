@@ -1,7 +1,7 @@
-package me.michqql.game.gfx.camera;
+package me.michqql.engine.gfx.camera;
 
-import me.michqql.game.gfx.Window;
-import me.michqql.game.input.MouseInput;
+import me.michqql.engine.Window;
+import me.michqql.engine.input.MouseInput;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -14,7 +14,10 @@ public class Camera {
     private final Matrix4f inverseProjectionMatrix;
     private final Matrix4f inverseViewMatrix;
     private final Vector2f position;
-    private final Vector2f projectionSize = new Vector2f(32f * 40f, 32f * 21f);
+
+    private float projectionWidth = 6;
+    private float projectionHeight = 3;
+    private final Vector2f projectionSize = new Vector2f(projectionWidth, projectionHeight);
 
     private float zoom = 1.0f;
 

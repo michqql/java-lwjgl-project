@@ -15,6 +15,7 @@ public class VisualPhysicsColliders implements EditorModule {
     private final EditorScene editorScene;
 
     private final Vector2f center = new Vector2f();
+    private final Vector2f offset = new Vector2f();
 
     public VisualPhysicsColliders(EditorScene editorScene) {
         this.editorScene = editorScene;
@@ -37,7 +38,9 @@ public class VisualPhysicsColliders implements EditorModule {
     }
 
     private void drawBoxCollider(GameObject gameObject, BoxCollider collider) {
-        center.set(gameObject.getTransform().getPosition()).add(collider.getOffset());
+        center.set(gameObject.getTransform().getPosition())
+                .add(offset.set(gameObject.getTransform().getScale()).mul(0.5f))
+                .add(collider.getOffset());
         DebugDraw.addBox2D(center, collider.getSize(), gameObject.getTransform().getRotation(),
                 OUTLINE_COLOUR, false, 20);
     }

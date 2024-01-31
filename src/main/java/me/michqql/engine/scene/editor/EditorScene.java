@@ -188,7 +188,7 @@ public class EditorScene extends Scene implements GuiDisplayScene {
                 ImGui.pushID(i);
                 if(ImGui.imageButton(sprite.getTexture().getTextureId(), displayWidth,
                         displayHeight, coords[2].x, coords[0].y, coords[0].x, coords[2].y)) {
-                    GameObject obj = Prefab.generateSpriteObject(sprite, displayWidth, displayHeight);
+                    GameObject obj = Prefab.generateSpriteObject(sprite, 0.25f, 0.25f);
                     holdingObject = obj;
                     addGameObject(obj);
                 }

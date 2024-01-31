@@ -38,6 +38,7 @@ public class Transform {
 
     public void setRotation(float rotation) {
         this.rotation = rotation % 360;
+        if(this.rotation < 0) this.rotation += 360f;
     }
 
     public int getZIndex() {

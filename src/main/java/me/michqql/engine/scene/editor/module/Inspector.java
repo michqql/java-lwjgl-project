@@ -8,9 +8,9 @@ import me.michqql.engine.entity.GameObject;
 import me.michqql.engine.entity.Transform;
 import me.michqql.engine.entity.components.Conflicts;
 import me.michqql.engine.entity.components.NonSelectable;
-import me.michqql.engine.entity.components.Rigidbody2D;
 import me.michqql.engine.gfx.render.PickingTexture;
 import me.michqql.engine.gfx.texture.Sprite;
+import me.michqql.engine.input.KeyboardInput;
 import me.michqql.engine.input.MouseButton;
 import me.michqql.engine.input.MouseInput;
 import me.michqql.engine.physics2d.BodyType;
@@ -23,6 +23,7 @@ import me.michqql.engine.util.gui.GuiClassDisplay;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import org.lwjgl.glfw.GLFW;
 import org.reflections.Reflections;
 
 import java.lang.reflect.*;
@@ -159,6 +160,11 @@ public class Inspector implements EditorModule {
 
             setSelectedObject(GameObjectUtil.getClickedGameObject(editorScene, pickingTexture, x, y));
             lastClickTime = System.currentTimeMillis();
+        }
+
+        if(selectedObject != null && KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_DELETE)) {
+            selectedObject.remove();
+            setSelectedObject(null);
         }
     }
 
