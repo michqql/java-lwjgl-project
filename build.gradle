@@ -58,4 +58,9 @@ dependencies {
 
     // Reflections
     implementation 'org.reflections:reflections:0.10.2'
+
+    // JBox2D
+    // https://mvnrepository.com/artifact/org.jbox2d/jbox2d-library
+    implementation 'org.jbox2d:jbox2d-library:2.2.1.1'
+
 }
